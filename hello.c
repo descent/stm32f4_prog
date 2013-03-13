@@ -3,7 +3,7 @@
 void delay(void)
 {
   volatile unsigned int i;
-  for (i = 0; i < 0x3ffff; +i);
+  for (i = 0; i < 0x3ffff; ++i);
 }
 
 int main(void)
