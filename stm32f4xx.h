@@ -324,6 +324,28 @@ typedef struct
   __IO uint32_t LCKR;     /*!< GPIO port configuration lock register, Address offset: 0x1C      */
   __IO uint32_t AFR[2];   /*!< GPIO alternate function registers,     Address offset: 0x20-0x24 */
 } GPIO_TypeDef;
+
+/** 
+  * @brief Universal Synchronous Asynchronous Receiver Transmitter
+  */
+ 
+typedef struct
+{
+  __IO uint16_t SR;         /*!< USART Status register,                   Address offset: 0x00 */
+  uint16_t      RESERVED0;  /*!< Reserved, 0x02                                                */
+  __IO uint16_t DR;         /*!< USART Data register,                     Address offset: 0x04 */
+  uint16_t      RESERVED1;  /*!< Reserved, 0x06                                                */
+  __IO uint16_t BRR;        /*!< USART Baud rate register,                Address offset: 0x08 */
+  uint16_t      RESERVED2;  /*!< Reserved, 0x0A                                                */
+  __IO uint16_t CR1;        /*!< USART Control register 1,                Address offset: 0x0C */
+  uint16_t      RESERVED3;  /*!< Reserved, 0x0E                                                */
+  __IO uint16_t CR2;        /*!< USART Control register 2,                Address offset: 0x10 */
+  uint16_t      RESERVED4;  /*!< Reserved, 0x12                                                */
+  __IO uint16_t CR3;        /*!< USART Control register 3,                Address offset: 0x14 */
+  uint16_t      RESERVED5;  /*!< Reserved, 0x16                                                */
+  __IO uint16_t GTPR;       /*!< USART Guard time and prescaler register, Address offset: 0x18 */
+  uint16_t      RESERVED6;  /*!< Reserved, 0x1A                                                */
+} USART_TypeDef;
 #if 0
 typedef const int32_t sc32;  /*!< Read Only */
 typedef const int16_t sc16;  /*!< Read Only */
@@ -913,27 +935,6 @@ typedef struct
   uint16_t      RESERVED14;  /*!< Reserved, 0x52                                            */
 } TIM_TypeDef;
 
-/** 
-  * @brief Universal Synchronous Asynchronous Receiver Transmitter
-  */
- 
-typedef struct
-{
-  __IO uint16_t SR;         /*!< USART Status register,                   Address offset: 0x00 */
-  uint16_t      RESERVED0;  /*!< Reserved, 0x02                                                */
-  __IO uint16_t DR;         /*!< USART Data register,                     Address offset: 0x04 */
-  uint16_t      RESERVED1;  /*!< Reserved, 0x06                                                */
-  __IO uint16_t BRR;        /*!< USART Baud rate register,                Address offset: 0x08 */
-  uint16_t      RESERVED2;  /*!< Reserved, 0x0A                                                */
-  __IO uint16_t CR1;        /*!< USART Control register 1,                Address offset: 0x0C */
-  uint16_t      RESERVED3;  /*!< Reserved, 0x0E                                                */
-  __IO uint16_t CR2;        /*!< USART Control register 2,                Address offset: 0x10 */
-  uint16_t      RESERVED4;  /*!< Reserved, 0x12                                                */
-  __IO uint16_t CR3;        /*!< USART Control register 3,                Address offset: 0x14 */
-  uint16_t      RESERVED5;  /*!< Reserved, 0x16                                                */
-  __IO uint16_t GTPR;       /*!< USART Guard time and prescaler register, Address offset: 0x18 */
-  uint16_t      RESERVED6;  /*!< Reserved, 0x1A                                                */
-} USART_TypeDef;
 
 /** 
   * @brief Window WATCHDOG
