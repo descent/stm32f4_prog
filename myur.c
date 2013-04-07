@@ -451,15 +451,60 @@ void ur_puts(USART_TypeDef* USARTx, volatile char *s)
   }
 }
 
+FlagStatus USART_GetFlagStatus(USART_TypeDef* USARTx, uint16_t USART_FLAG)
+{
+  FlagStatus bitstatus = RESET;
+  /* Check the parameters */
+  assert_param(IS_USART_ALL_PERIPH(USARTx));
+  assert_param(IS_USART_FLAG(USART_FLAG));
+
+  /* The CTS flag is not available for UART4 and UART5 */
+  if (USART_FLAG == USART_FLAG_CTS)
+  {
+    assert_param(IS_USART_1236_PERIPH(USARTx));
+  }
+
+  if ((USARTx->SR & USART_FLAG) != (uint16_t)RESET)
+  {
+    bitstatus = SET;
+  }
+  else
+  {
+    bitstatus = RESET;
+  }
+  return bitstatus;
+}
+
+uint16_t USART_ReceiveData(USART_TypeDef* USARTx)
+{
+  /* Check the parameters */
+  assert_param(IS_USART_ALL_PERIPH(USARTx));
+
+  /* Receive Data */
+  return (uint16_t)(USARTx->DR & (uint16_t)0x01FF);
+}
+
+
+uint8_t get_byte()
+{
+  while(USART_GetFlagStatus(USART2, USART_FLAG_RXNE) == RESET);
+    
+  return (USART_ReceiveData(USART2) & 0x7F);
+} 
 
 int main(void)
 {
   init_usart(9600);
   //init_command();
 
+  ur_puts(USART2, "Init complete! Hello World!\r\n");
   while(1)
   {
-    ur_puts(USART2, "Init complete! Hello World!\r\n");
+    char ch = get_byte();
+    if (ch == '\r') // enter, 0x13
+      ur_puts(USART2, "\r\n");
+    else
+      USART_SendData(USART2, ch);
     //send_string("ur output\n");
   }
       
