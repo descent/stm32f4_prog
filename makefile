@@ -1,6 +1,11 @@
 CFLAGS=-g
 MYCFLAGS=-Wl,-T./stm32.ld -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
 
+myur.bin: myur.elf
+	arm-none-eabi-objcopy -Obinary $< $@
+myur.elf: myur.c
+	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -o $@ $< 
+
 factorial.bin: factorial.elf
 	arm-none-eabi-objcopy -O binary $< $@
 
