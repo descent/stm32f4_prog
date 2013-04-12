@@ -506,7 +506,7 @@ int main(void)
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-  init_usart(9600);
+  init_usart(115200);
   //init_command();
 
   ur_puts(USART2, "Init complete! Hello World!\r\n");
@@ -524,26 +524,31 @@ int main(void)
       case '1':
       {
         GPIO_SetBits(GPIOD, GPIO_Pin_12);
+        ur_puts(USART2, "pin 12\r\n");
         break;
       }
       case '2':
       {
         GPIO_SetBits(GPIOD, GPIO_Pin_13);
+        ur_puts(USART2, "pin 13\r\n");
         break;
       }
       case '3':
       {
         GPIO_SetBits(GPIOD, GPIO_Pin_14);
+        ur_puts(USART2, "pin 14\r\n");
         break;
       }
       case '4':
       {
         GPIO_SetBits(GPIOD, GPIO_Pin_15);
+        ur_puts(USART2, "pin 15\r\n");
         break;
       }
       case '5':
       {
         GPIO_ResetBits(GPIOD, GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);
+        ur_puts(USART2, "disable 12 ~ 15 led\r\n");
         break;
       }
       default:
