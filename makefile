@@ -5,11 +5,11 @@ myur_led.bin: myur_led.elf
 myur_led.elf: myur_led.c
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -o $@ $< 
 
-int.bin: int.elf
-	arm-none-eabi-objcopy -O binary $< $@
-int.elf: int.o
-	arm-none-eabi-ld -Ttext 0x0 -o $@ $<
-int.o: int.S
+process.bin: process.elf
+	arm-none-eabi-objcopy -R .data -O binary $< $@
+process.elf: process.o
+	arm-none-eabi-ld -Ttext 0x0 -Tdata 0x20000000 -o $@ $<
+process.o: process.S
 	arm-none-eabi-as -g -mcpu=cortex-m3 -mthumb -o $@ $<
 
 myur.bin: myur.elf
