@@ -114,9 +114,9 @@ int_isr:
   ldr r0, [r5]
   cmp r0, #0
   ittee eq
-  ldreq sp,=#0x20000040
+  ldreq sp,=#stack_frame_a
   moveq r1, #1
-  ldrne sp,=#0x20000060
+  ldrne sp,=#stack_frame_b
   movne r1, #0
 
   str r1, [r5]
