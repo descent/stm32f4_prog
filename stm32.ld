@@ -44,7 +44,8 @@ SECTIONS
     . = ALIGN(8);
     *(.stackarea .stackares.*)
     . = ALIGN(8);
-  }
+  } > SRAM
+
   . = ALIGN(4);
   _end = .;
 }
