@@ -2,7 +2,8 @@
 # ref : http://tw.m.wretch.yahoo.com/blog/DreamYeh/888788
 # comment: #, @
 
-.equ STACK_TOP, 0x20000800
+.extern init_stm32f4
+.equ STACK_TOP, 0x20001000
 .text
 .global _start
 .code 16
@@ -34,22 +35,30 @@ start:
   mov r1, #0
   str r1, [r5]
 
-  ldr r0, =0xe000e010 @ control reg
-  mov r1, #0
-  str r1, [r0]
-  ldr r1, =0x3ff
-  str r1, [r0, #4]
-  str r1, [r0, #8]
-  mov r1, #0x7
-  str r1, [r0] @ enable systick
+  bl init_stm32f4
+  bl led12_off
+  bl led14_off
 
-  # 0xe000e014
-  # 0xe000e018
-  # 0xe000e01c
+  bl led12_on
+  bl delay_func
+  bl led14_on
 
-loop:
-  nop
-  b loop
+@  ldr r0, =0xe000e010 @ control reg
+@  mov r1, #0
+@  str r1, [r0]
+@  ldr r1, =0x3ff
+@  str r1, [r0, #4]
+@  str r1, [r0, #8]
+@  mov r1, #0x7
+@  str r1, [r0] @ enable systick
+@
+@  # 0xe000e014
+@  # 0xe000e018
+@  # 0xe000e01c
+@
+@loop:
+@  nop
+@  b loop
 
   movs r3, #3
   movs r5, #5
@@ -107,6 +116,8 @@ deadloop:
 .type proc_a, function @ let lsb to 1
 proc_a:
   movs r0, #1
+  bl led12_on
+  bl delay_func
   nop
   svc 0
   nop
@@ -115,6 +126,8 @@ proc_a:
 .type proc_b, function @ let lsb to 1
 proc_b:
   movs r1, #2
+  bl led14_on
+  bl delay_func
   nop
   svc 0
   nop
@@ -127,6 +140,10 @@ del_func:
 
 int_isr:
   nop
+  ldr sp, =#isr_stack
+  bl led12_off
+  bl led14_off
+  mov lr, #0xfffffff9
   movs r5, #5
   ldr r5, =cur_proc
   ldr r0, [r5]
@@ -172,3 +189,6 @@ stack_frame_b:
 
 cur_proc:
 .word 1
+
+.space  0x200, 0
+isr_stack:
