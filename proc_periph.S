@@ -2,6 +2,8 @@
 # ref : http://tw.m.wretch.yahoo.com/blog/DreamYeh/888788
 # comment: #, @
 
+#define ENABLE_SYSTICK
+
 .extern init_stm32f4
 .equ STACK_TOP, 0x20001000
 .text
@@ -36,21 +38,15 @@ start:
   str r1, [r5]
 
   bl init_stm32f4
-  bl led12_off
-  bl led14_off
+@  bl led12_off
+@  bl led14_off
 
-  bl led12_on
-  bl delay_func
-  bl led14_on
+@  bl led12_on
+@  bl led14_on
 
-@  ldr r0, =0xe000e010 @ control reg
-@  mov r1, #0
-@  str r1, [r0]
-@  ldr r1, =0x3ff
-@  str r1, [r0, #4]
-@  str r1, [r0, #8]
-@  mov r1, #0x7
-@  str r1, [r0] @ enable systick
+@  bl delay_func
+
+
 @
 @  # 0xe000e014
 @  # 0xe000e018
@@ -69,11 +65,11 @@ start:
 @  ldr r1, =del_func
 @  str r1, [r0, #20] @ setup lr
 
-  ldr r1,=#0xffffffff
+  ldr r1,=del_func
   str r1, [r0, #20] @ setup lr
 
-  @ldr r1, =proc_a
-  adr r1, proc_a
+  ldr r1, =proc_a
+  @adr r1, proc_a
   str r1, [r0, #24] @ setup pc
 @  mov r1, #0x21000000
   mov r1, #0x1000000
@@ -95,7 +91,7 @@ start:
 @  ldr r1, =del_func
 @  str r1, [r0, #20] @ setup lr
 
-  ldr r1,=#0xffffffff
+  ldr r1,=del_func
   str r1, [r0, #20] @ setup lr
 
   ldr r1, =proc_b
@@ -108,18 +104,34 @@ start:
   @mov r0, #0x20000100
   @ldr sp, [r0, #16]
 @  ldr sp,=#0x20000040
+
+#ifdef ENABLE_SYSTICK
+@ 0xe000ed24 check systick ist active
+@ 0xe000e018 check systick count
+  ldr r0, =0xe000e010 @ control reg
+  mov r1, #0
+  str r1, [r0]
+  ldr r1, =0x3ff
+  str r1, [r0, #4]
+  str r1, [r0, #8]
+  mov r1, #0x7
+  str r1, [r0] @ enable systick
+#else
   svc 0
+#endif
+
 
 deadloop:
+  nop
   b deadloop
 
 .type proc_a, function @ let lsb to 1
 proc_a:
   movs r0, #1
   bl led12_on
-  bl delay_func
+@  bl delay_func
   nop
-  svc 0
+@  svc 0
   nop
   b proc_a
 
@@ -127,9 +139,9 @@ proc_a:
 proc_b:
   movs r1, #2
   bl led14_on
-  bl delay_func
+@  bl delay_func
   nop
-  svc 0
+@  svc 0
   nop
   b proc_b
 
