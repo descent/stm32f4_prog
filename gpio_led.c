@@ -10,6 +10,8 @@
 /* #define VECT_TAB_SRAM */
 #define VECT_TAB_OFFSET  0x0 /*!< Vector Table base offset field.  This value must be a multiple of 0x200. */
 
+int delay_time = 0x300000;
+
 void Delay(uint32_t delay )
 {
   while(delay) delay--;
@@ -173,26 +175,31 @@ int init_stm32f4(void)
 void led12_on()
 {
   //GPIO_SetBits_svc(GPIOD, GPIO_Pin_12);
-  GPIO_SetBits(GPIOD, GPIO_Pin_12);
+  //GPIO_SetBits(GPIOD, GPIO_Pin_12);
+
+  GPIOD->BSRRL = GPIO_Pin_12;
 }
 
 void led12_off()
 {
-  GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+  //GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+  GPIOD->BSRRH = GPIO_Pin_12;
 }
 
 void led14_on()
 {
-  GPIO_SetBits(GPIOD, GPIO_Pin_14);
+  //GPIO_SetBits(GPIOD, GPIO_Pin_14);
+  GPIOD->BSRRL = GPIO_Pin_14;
 }
 
 void led14_off()
 {
-  GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+  //GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+  GPIOD->BSRRH = GPIO_Pin_14;
 }
 
 void delay_func(uint32_t delay )
 {
-  Delay(0x300000);
+  Delay(delay_time);
 }
 #endif
