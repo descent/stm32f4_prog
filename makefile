@@ -1,6 +1,12 @@
 CFLAGS=-g
 MYCFLAGS=-Wl,-T./stm32.ld -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
 
+
+myc.bin: myc.elf
+	arm-none-eabi-objcopy -Obinary $< $@
+myc.elf: myc.c
+	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -o $@ $< 
+
 proc_periph.bin: proc_periph.elf
 	arm-none-eabi-objcopy -R .data -O binary $< $@
 
@@ -8,7 +14,8 @@ proc_periph.elf: proc_periph.o gpio_led.o
 	arm-none-eabi-ld -Ttext 0x0 -Tdata 0x20000000 -Tbss 0x20000100 -o $@ $^
 
 proc_periph.o: proc_periph.S
-	arm-none-eabi-as -g -mcpu=cortex-m3 -mthumb -o $@ $<
+	#arm-none-eabi-as -g -mcpu=cortex-m3 -mthumb -o $@ $<
+	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
 
 gpio_led.o: gpio_led.c gpio_led.h
 	arm-none-eabi-gcc $(CFLAGS) -mcpu=cortex-m3 -mthumb -nostartfiles -c $<
