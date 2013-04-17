@@ -92,6 +92,16 @@ void GPIO_SetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
   GPIOx->BSRRL = GPIO_Pin;
 } 
 
+void GPIO_SetBits_svc(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+{   
+  /* Check the parameters */
+  //assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
+  //assert_param(IS_GPIO_PIN(GPIO_Pin));
+    
+  GPIOx->BSRRL = GPIO_Pin;
+  __asm ("svc 0");
+} 
+
 
 void GPIO_ResetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
@@ -162,6 +172,7 @@ int init_stm32f4(void)
 #if 1
 void led12_on()
 {
+  //GPIO_SetBits_svc(GPIOD, GPIO_Pin_12);
   GPIO_SetBits(GPIOD, GPIO_Pin_12);
 }
 
