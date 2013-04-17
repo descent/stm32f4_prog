@@ -38,11 +38,13 @@ start:
   str r1, [r5]
 
   bl init_stm32f4
-@  bl led12_off
-@  bl led14_off
+  bl asm_led12_off
+  bl asm_led14_off
 
-@  bl led12_on
-@  bl led14_on
+  bl asm_delay
+
+  bl asm_led12_on
+  bl asm_led14_on
 
 @  bl delay_func
 
@@ -106,12 +108,12 @@ start:
 @  ldr sp,=#0x20000040
 
 #ifdef ENABLE_SYSTICK
-@ 0xe000ed24 check systick ist active
+@ 0xe000ed24 check systick isr active
 @ 0xe000e018 check systick count
   ldr r0, =0xe000e010 @ control reg
   mov r1, #0
   str r1, [r0]
-  ldr r1, =0x3ff
+  ldr r1, =0xffffff
   str r1, [r0, #4]
   str r1, [r0, #8]
   mov r1, #0x7
@@ -128,7 +130,9 @@ deadloop:
 .type proc_a, function @ let lsb to 1
 proc_a:
   movs r0, #1
-  bl led12_on
+  bl asm_led12_on
+  bl asm_delay
+@  bl asm_led12_off
 @  bl delay_func
   nop
 @  svc 0
@@ -138,7 +142,9 @@ proc_a:
 .type proc_b, function @ let lsb to 1
 proc_b:
   movs r1, #2
-  bl led14_on
+  bl asm_led14_on
+  bl asm_delay
+@  bl asm_led14_off
 @  bl delay_func
   nop
 @  svc 0
@@ -152,10 +158,11 @@ del_func:
 
 int_isr:
   nop
-  ldr sp, =#isr_stack
-  bl led12_off
-  bl led14_off
-  mov lr, #0xfffffff9
+@  ldr sp, =#isr_stack
+
+  bl asm_led12_off
+  bl asm_led14_off
+  bl asm_delay
   movs r5, #5
   ldr r5, =cur_proc
   ldr r0, [r5]
@@ -166,9 +173,61 @@ int_isr:
   ldrne sp,=#stack_frame_b
   movne r1, #0
 
+#if 0
+  cmp r0, #0
+  it eq
+  bleq asm_led14_off
+
+  cmp r0, #0
+  it ne
+  blne asm_led12_off
+@  blne asm_led12_off
+#endif
+
   str r1, [r5]
+  mov lr, #0xfffffff9
   bx lr
   #movs pc, proc_a
+
+asm_led12_on:
+  mov.w   r3, #3072       
+  movt    r3, #16386     
+  mov.w   r2, #4096     
+  strh    r2, [r3, #24]
+  bx lr
+
+
+asm_led12_off:
+  mov.w   r3, #3072      
+  movt    r3, #16386    
+  mov.w   r2, #4096    
+  strh    r2, [r3, #26]
+  bx      lr
+
+asm_led14_on:
+  mov.w   r3, #3072  
+  movt    r3, #16386   
+  mov.w   r2, #16384  
+  strh    r2, [r3, #24]
+  bx      lr
+
+asm_led14_off:
+  mov.w   r3, #3072     
+  movt    r3, #16386   
+  mov.w   r2, #16384  
+  strh    r2, [r3, #26]
+  bx      lr
+
+
+asm_delay:
+  movs r0, #0x200000
+  movs r1, #0
+
+loop:
+  adds r1, r0
+  subs r0, #1
+  bne loop
+  bx lr
 
 
 #.bss
@@ -204,3 +263,5 @@ cur_proc:
 
 .space  0x200, 0
 isr_stack:
+
+
