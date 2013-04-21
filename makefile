@@ -1,6 +1,14 @@
 CFLAGS=-g
 MYCFLAGS=-Wl,-T./stm32.ld -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
 
+process_1.bin: process_1.elf
+	arm-none-eabi-objcopy -R .data -O binary $< $@
+process_1.elf: process_1.o
+	arm-none-eabi-ld -Ttext 0x0 -Tdata 0x20000000 -o $@ $<
+process_1.o: process_1.S
+	#arm-none-eabi-as -g -mcpu=cortex-m3 -mthumb -o $@ $<
+	arm-none-eabi-gcc -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -c $< 
+
 two_stack.bin: two_stack.elf
 	arm-none-eabi-objcopy -R .data -O binary $< $@
 
