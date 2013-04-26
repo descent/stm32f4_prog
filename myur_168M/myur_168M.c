@@ -1,5 +1,5 @@
 #include "stm32.h"
-//#include "stm32f4_discovery.h"
+#include "type.h"
 #include "stm32f4xx_usart.h"
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
@@ -21,6 +21,47 @@
 #define PLLI2S_N   192
 #define PLLI2S_R   5
 
+// no sign version
+char* s32_itoa(uint32_t n, char* str, int radix)
+{
+  char digit[]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  char* p=str;
+  char* head=str;
+  //int radix = 10;
+
+//  if(!p || radix < 2 || radix > 36)
+//    return p;
+  if (n==0)
+  {
+    *p++='0';
+    *p=0;
+    return str;
+  }
+  if (radix == 10 && n < 0)
+  {
+    *p++='-';
+    n= -n;
+  }
+  while(n)
+  {
+    *p++=digit[n%radix];
+    //s32_put_char(*(p-1), (u8*)(0xb8000+80*2));
+    n/=radix;
+  }
+  *p=0;
+  #if 1
+  for (--p; head < p ; ++head, --p)
+  {
+    char temp=*head;
+    if (*(p-1) != '-')
+    {
+      *head=*p;
+      *p=temp;
+    }
+  }
+  #endif
+  return str;
+}
 
 static __I uint8_t APBAHBPrescTable[16] = {0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9};
 
@@ -584,15 +625,43 @@ void SystemInit(void)
  */
 int main(void)
 {
-  SystemInit();
+  //SystemInit();
 
   init_usart(115200);
+  ur_puts(USART2, "Init complete! Hello World!\r\n");
 
   RCC_ClocksTypeDef RCC_ClocksStatus;
-
   RCC_GetClocksFreq(&RCC_ClocksStatus);
 
-  ur_puts(USART2, "Init complete! Hello World!\r\n");
+  char str[20]="";
+
+  s32_itoa(RCC_ClocksStatus.SYSCLK_Frequency, str, 10);
+  ur_puts(USART2, "SYSCLK_Frequency: ");
+  ur_puts(USART2, str);
+  ur_puts(USART2, "\r\n");
+
+  s32_itoa(RCC_ClocksStatus.HCLK_Frequency, str, 10);
+  ur_puts(USART2, "HCLK_Frequency: ");
+  ur_puts(USART2, str);
+  ur_puts(USART2, "\r\n");
+
+  s32_itoa(RCC_ClocksStatus.PCLK1_Frequency, str, 10);
+  ur_puts(USART2, "PCLK1_Frequency: ");
+  ur_puts(USART2, str);
+  ur_puts(USART2, "\r\n");
+
+  s32_itoa(RCC_ClocksStatus.PCLK2_Frequency, str, 10);
+  ur_puts(USART2, "PCLK2_Frequency: ");
+  ur_puts(USART2, str);
+  ur_puts(USART2, "\r\n");
+
+#if 0
+  uint32_t SYSCLK_Frequency; /*!<  SYSCLK clock frequency expressed in Hz */
+  uint32_t HCLK_Frequency;   /*!<  HCLK clock frequency expressed in Hz */
+  uint32_t PCLK1_Frequency;  /*!<  PCLK1 clock frequency expressed in Hz */
+  uint32_t PCLK2_Frequency;  /*!<  PCLK2 clock frequency expressed in Hz */
+#endif
+
   while(1)
   {
     char ch = get_byte();
