@@ -4,6 +4,8 @@
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
 
+#define SET_CPU_CLOCK
+
 #define VECT_TAB_OFFSET  0x0 /*!< Vector Table base offset field.  This value must be a multiple of 0x200. */
 
 /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N */
@@ -625,7 +627,9 @@ void SystemInit(void)
  */
 int main(void)
 {
-  //SystemInit();
+#ifdef SET_CPU_CLOCK
+  SystemInit();
+#endif
 
   init_usart(115200);
   ur_puts(USART2, "Init complete! Hello World!\r\n");
