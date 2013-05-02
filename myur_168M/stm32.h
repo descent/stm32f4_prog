@@ -28,12 +28,28 @@ typedef void (*pfnISR)(void);
 __attribute__((section(".stackares")))
 static unsigned long pulStack[STACK_SIZE];
 
-
+void int_isr(void);
 __attribute__((section(".isr_vector")))
 pfnISR VectorTable[]=
 {
   (pfnISR)((unsigned long)pulStack+sizeof(pulStack)),
-  ResetISR
+  ResetISR,
+  ResetISR,
+  ResetISR,
+  ResetISR,
+  ResetISR,
+  ResetISR,
+  ResetISR,
+  ResetISR,
+  ResetISR,
+  ResetISR,
+  int_isr, // 11, svc
+  int_isr, 
+  int_isr, 
+  int_isr, 
+  int_isr, // 15, systick
+
+
 };
 
 #endif
