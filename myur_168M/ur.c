@@ -681,10 +681,10 @@ int main(void)
 
 void put_a()
 {
-  ur_puts(USART2, "proc_a\r\n");
+  ur_puts(USART2, "abc012\r\n");
 }
 
 void put_b()
 {
-  ur_puts(USART2, "proc_b\r\n");
+  ur_puts(USART2, "xyz789\r\n");
 }
