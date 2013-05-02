@@ -1,5 +1,7 @@
 # for stm32f4
-file myur_168M.elf
+#file myur_168M.elf
+file proc_periph.elf
+b main
 # qemu
 target remote localhost:1234
 
