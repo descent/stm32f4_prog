@@ -28,6 +28,8 @@ _start:
   .word int_isr+1
 #endif
 
+//#define ENABLE_SYSTICK
+
 .syntax unified
 .code 16
 .text
@@ -56,7 +58,20 @@ init_proc:
   ldr r1, =stack_frame_a
   str r1, [r0]
 
+#ifdef ENABLE_SYSTICK
+@ 0xe000ed24 check systick isr active
+@ 0xe000e018 check systick count
+  ldr r0, =0xe000e010 @ control reg
+  mov r1, #0
+  str r1, [r0]
+  ldr r1, =0x3fff
+  str r1, [r0, #4]
+  str r1, [r0, #8]
+  mov r1, #0x7
+  str r1, [r0] @ enable systick
+#else
   svc 0
+#endif
 
 .type proc_b, function @ let lsb to 1
 proc_b:
