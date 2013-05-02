@@ -619,6 +619,8 @@ void SystemInit(void)
 #endif
 }
 
+int bit_band;
+
 /**
  * @brief  Main program.
  * @param  None
@@ -626,12 +628,27 @@ void SystemInit(void)
  */
 int main(void)
 {
+  void asm_set(void);
+  void asm_clear(void);
+
 #ifdef SET_CPU_CLOCK
   SystemInit();
 #endif
 
   init_usart(115200);
   ur_puts(USART2, "Init complete! Hello World!\r\n");
+
+  asm_set();
+  ur_puts(USART2, "set!\r\n");
+  asm_clear();
+  ur_puts(USART2, "clear!\r\n");
+
+#if 0
+  *((uint32_t*)(((uint32_t)&bit_band - 0x20000000)*128 + 0x22000000)) = 1;
+  __asm__ ("ldr r0, 0x22000000\t\n");
+  __asm__ ("mov r1, #1\t\n");
+  __asm__ ("str r1, [r0]\t\n");
+#endif
 
   RCC_ClocksTypeDef RCC_ClocksStatus;
   RCC_GetClocksFreq(&RCC_ClocksStatus);

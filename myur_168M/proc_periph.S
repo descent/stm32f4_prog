@@ -28,7 +28,7 @@ _start:
   .word int_isr+1
 #endif
 
-//#define ENABLE_SYSTICK
+#define ENABLE_SYSTICK
 
 .syntax unified
 .code 16
@@ -99,6 +99,36 @@ del_func:
   mov r5, #5
   b del_func
 
+#if 1
+.global asm_set
+.type asm_set, function @ let lsb to 1
+asm_set:
+#if 0
+  @ldr r0, =0x22000008
+  ldr r0, =0x22001a80
+  mov r1, #1
+  str r1, [r0]
+#else
+  ldr r0, =asm_bit_band
+  sub r0, #0x20000000
+  lsl r0, #5 @ x 32
+  add r0, #0x22000000
+  mov r1, #1
+  str r1, [r0]
+#endif
+  bx lr
+
+.global asm_clear
+.type asm_clear, function @ let lsb to 1
+asm_clear:
+  ldr r0, =asm_bit_band
+  sub r0, #0x20000000
+  lsl r0, #5
+  add r0, #0x22000000
+  mov r1, #0
+  str r1, [r0]
+  bx lr
+#endif
 .global int_isr
 .type int_isr, function @ let lsb to 1
 int_isr:
@@ -168,6 +198,9 @@ stack_frame_b:
 
 cur_proc:
 .word 1
+
+asm_bit_band:
+.word 0
 
 a_sp:
 .word 0
