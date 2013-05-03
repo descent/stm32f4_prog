@@ -5,6 +5,12 @@
 
 //#define SET_CPU_CLOCK
 
+//ref: http://blog.csdn.net/shevsten/article/details/7676397
+#define BITBAND_ALIAS_ADDRESS(addr, bit) \  
+    ((volatile uint32_t*)((((uint32_t)(addr) & 0xF0000000) + 0x02000000) \  
+                          +((((uint32_t)(addr)&0xFFFFF)*32)\  
+                          +(  (uint32_t)(bit)*4))))  
+
 #define VECT_TAB_OFFSET  0x0 /*!< Vector Table base offset field.  This value must be a multiple of 0x200. */
 
 /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N */
@@ -631,6 +637,7 @@ int main(void)
 {
   void asm_set(void);
   void asm_clear(void);
+  *(uint32_t*)BITBAND_ALIAS_ADDRESS(bit_band, 0)=1;
   ++bit_band;
 
 #ifdef SET_CPU_CLOCK
@@ -655,10 +662,6 @@ int main(void)
  *  \param bit  The bit position of bitbanding bit. 
  *  \callergraph 
  */  
-#define BITBAND_ALIAS_ADDRESS(addr, bit) \  
-    ((volatile uint32_t*)((((uint32_t)(addr) & 0xF0000000) + 0x02000000) \  
-                          +((((uint32_t)(addr)&0xFFFFF)*32)\  
-                          +(  (uint32_t)(bit)*4))))  
 
   *((uint32_t*)(((uint32_t)&bit_band - 0x20000000)*128 + 0x22000000)) = 1;
   __asm__ ("ldr r0, 0x22000000\t\n");
