@@ -620,6 +620,7 @@ void SystemInit(void)
 }
 
 int bit_band;
+int sv=1;
 
 /**
  * @brief  Main program.
@@ -630,6 +631,7 @@ int main(void)
 {
   void asm_set(void);
   void asm_clear(void);
+  ++bit_band;
 
 #ifdef SET_CPU_CLOCK
   SystemInit();
@@ -644,6 +646,20 @@ int main(void)
   ur_puts(USART2, "clear!\r\n");
 
 #if 0
+/** 
+ *  \brief Calculate bit band alias address. 
+ *  
+ *  Calculate the bit band alias address and return a pointer address to word. 
+ * 
+ *  \param addr The byte address of bitbanding bit. 
+ *  \param bit  The bit position of bitbanding bit. 
+ *  \callergraph 
+ */  
+#define BITBAND_ALIAS_ADDRESS(addr, bit) \  
+    ((volatile uint32_t*)((((uint32_t)(addr) & 0xF0000000) + 0x02000000) \  
+                          +((((uint32_t)(addr)&0xFFFFF)*32)\  
+                          +(  (uint32_t)(bit)*4))))  
+
   *((uint32_t*)(((uint32_t)&bit_band - 0x20000000)*128 + 0x22000000)) = 1;
   __asm__ ("ldr r0, 0x22000000\t\n");
   __asm__ ("mov r1, #1\t\n");
@@ -698,10 +714,16 @@ int main(void)
 
 void put_a()
 {
+  --sv;
+  while(sv < 0);
   ur_puts(USART2, "abc012\r\n");
+  ++sv;
 }
 
 void put_b()
 {
+  --sv;
+  while(sv < 0);
+  ++sv;
   ur_puts(USART2, "xyz789\r\n");
 }
