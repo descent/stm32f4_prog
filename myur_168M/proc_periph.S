@@ -70,8 +70,6 @@ init_proc:
   str r1, [r0, #8]
   mov r1, #0x7
   str r1, [r0] @ enable systick
-#else
-  svc 0
 #endif
   svc 0
 @  bx lr
