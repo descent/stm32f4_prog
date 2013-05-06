@@ -637,8 +637,10 @@ int main(void)
 {
   void asm_set(void);
   void asm_clear(void);
+#if 0
   *(uint32_t*)BITBAND_ALIAS_ADDRESS(bit_band, 0)=1;
   ++bit_band;
+#endif
 
 #ifdef SET_CPU_CLOCK
   SystemInit();
@@ -696,6 +698,7 @@ int main(void)
 
   void init_proc();
   init_proc();
+  //while(1);
 
 #if 0
   uint32_t SYSCLK_Frequency; /*!<  SYSCLK clock frequency expressed in Hz */
@@ -717,16 +720,16 @@ int main(void)
 
 void put_a()
 {
-  --sv;
-  while(sv < 0);
+  //--sv;
+  //while(sv < 0);
   ur_puts(USART2, "abc012\r\n");
-  ++sv;
+  //++sv;
 }
 
 void put_b()
 {
-  --sv;
-  while(sv < 0);
-  ++sv;
+  //--sv;
+  //while(sv < 0);
   ur_puts(USART2, "xyz789\r\n");
+  //++sv;
 }
