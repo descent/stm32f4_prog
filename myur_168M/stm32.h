@@ -34,6 +34,7 @@ pfnISR VectorTable[]=
 {
   (pfnISR)((unsigned long)pulStack+sizeof(pulStack)),
   ResetISR,
+#if 1
   ResetISR,
   ResetISR,
   ResetISR,
@@ -48,7 +49,7 @@ pfnISR VectorTable[]=
   int_isr, 
   int_isr, 
   int_isr, // 15, systick
-
+#endif
 
 };
 
