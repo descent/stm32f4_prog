@@ -56,6 +56,7 @@ init_proc:
 
   ldr r0, =a_sp
   ldr r1, =stack_frame_a
+  sub r1, #4 @ save for r7
   str r1, [r0]
 
 #ifdef ENABLE_SYSTICK
@@ -72,13 +73,15 @@ init_proc:
 #else
   svc 0
 #endif
+  svc 0
+@  bx lr
 
 .type proc_b, function @ let lsb to 1
 proc_b:
   movs r1, #2
   nop
-  bl put_a
-  svc 0
+  bl put_b
+@  svc 0
   nop
   b proc_b
 
@@ -87,9 +90,9 @@ proc_b:
 .type proc_a, function @ let lsb to 1
 proc_a:
   movs r0, #1
-  bl put_b
+  bl put_a
   nop
-  svc 0
+@  svc 0
   nop
   b proc_a
 
@@ -132,6 +135,7 @@ asm_clear:
 .global int_isr
 .type int_isr, function @ let lsb to 1
 int_isr:
+  push {r7}
   mov r3, sp @ save cur sp
   @add     r3, sp, #0
 
@@ -164,6 +168,7 @@ int_isr:
 
   ldr sp, [r1]
 @  mov sp, r1
+  pop {r7}
   bx lr
   #movs pc, proc_a
 
@@ -200,6 +205,11 @@ cur_proc:
 .word 1
 
 asm_bit_band:
+.word 0
+
+a_r7:
+.word 0
+b_r7:
 .word 0
 
 a_sp:
