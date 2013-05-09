@@ -28,6 +28,11 @@
 #define PLLI2S_N   192
 #define PLLI2S_R   5
 
+void Delay(uint32_t delay )
+{
+  while(delay) delay--;
+}
+
 // no sign version
 char* s32_itoa(uint32_t n, char* str, int radix)
 {
@@ -626,7 +631,7 @@ void SystemInit(void)
 }
 
 int bit_band;
-int sv=1;
+int c_sv=1;
 
 /**
  * @brief  Main program.
@@ -718,18 +723,56 @@ int main(void)
 #endif
 }
 
+int asm_inc();
+int asm_dec();
+extern int sv, lock;
+
+int test_and_set();
+
 void put_a()
 {
   //--sv;
   //while(sv < 0);
+  
+  //while(asm_set_sv()==1);
+#if 0
+  int r;
+  do
+  {
+    r=asm_set_sv();
+  }
+  while(r==1 || sv != 1);
+#endif
+  while(test_and_set() == 1);
   ur_puts(USART2, "abc012\r\n");
-  //++sv;
+  lock = 0;
+  Delay(0x3FF);
+
+  //__asm__ ("clrex.w\t\r");
+  //sv=0;
 }
 
 void put_b()
 {
-  //--sv;
+#if 0
   //while(sv < 0);
+  //while(asm_set_sv()==1);
+  int r;
+  do
+  {
+    r = asm_set_sv();
+  }
+  while(r==1 || sv != 1);
+#endif
+  //--c_sv;
+  //while(c_sv < 0);
+
+  while(test_and_set() == 1);
   ur_puts(USART2, "xyz789\r\n");
-  //++sv;
+  lock = 0;
+  Delay(0xfff);
+
+  //++c_sv;
+  //__asm__ ("clrex.w\t\r");
+  //sv=0;
 }
