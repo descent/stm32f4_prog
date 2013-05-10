@@ -729,6 +729,8 @@ extern int sv, lock;
 
 int test_and_set();
 
+//#define  SVC__
+
 void put_a()
 {
   //--sv;
@@ -743,7 +745,14 @@ void put_a()
   }
   while(r==1 || sv != 1);
 #endif
-  while(test_and_set() == 1);
+  while(test_and_set() == 1)
+  {
+  #ifdef SVC__
+    __asm__ ("svc 0\t\n");
+  #else
+    ;
+  #endif
+  }
   ur_puts(USART2, "abc012\r\n");
   lock = 0;
   Delay(0x3FF);
@@ -767,7 +776,14 @@ void put_b()
   //--c_sv;
   //while(c_sv < 0);
 
-  while(test_and_set() == 1);
+  while(test_and_set() == 1)
+  {
+  #ifdef SVC__
+    __asm__ ("svc 0\t\n");
+  #else
+    ;
+  #endif
+  }
   ur_puts(USART2, "xyz789\r\n");
   lock = 0;
   Delay(0xfff);
