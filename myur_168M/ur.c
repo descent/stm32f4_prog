@@ -4,6 +4,7 @@
 #include "stm32f4xx_gpio.h"
 
 //#define SET_CPU_CLOCK
+#define USE_SPIN_LOCK
 
 //ref: http://blog.csdn.net/shevsten/article/details/7676397
 #define BITBAND_ALIAS_ADDRESS(addr, bit) \  
@@ -745,6 +746,9 @@ void put_a()
   }
   while(r==1 || sv != 1);
 #endif
+
+
+#ifdef USE_SPIN_LOCK
   while(test_and_set() == 1)
   {
   #ifdef SVC__
@@ -753,8 +757,11 @@ void put_a()
     ;
   #endif
   }
+#endif
   ur_puts(USART2, "abc012\r\n");
+#ifdef USE_SPIN_LOCK
   lock = 0;
+#endif
   Delay(0x3FF);
 
   //__asm__ ("clrex.w\t\r");
@@ -776,6 +783,7 @@ void put_b()
   //--c_sv;
   //while(c_sv < 0);
 
+#ifdef USE_SPIN_LOCK
   while(test_and_set() == 1)
   {
   #ifdef SVC__
@@ -784,8 +792,11 @@ void put_b()
     ;
   #endif
   }
+#endif
   ur_puts(USART2, "xyz789\r\n");
+#ifdef USE_SPIN_LOCK
   lock = 0;
+#endif
   Delay(0xfff);
 
   //++c_sv;
