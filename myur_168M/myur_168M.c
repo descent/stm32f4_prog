@@ -675,3 +675,8 @@ int main(void)
     //send_string("ur output\n");
   }
 }
+
+void int_isr(void)
+{
+}
+
