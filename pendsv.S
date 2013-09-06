@@ -1,4 +1,4 @@
-# test pendSV handler
+# test pendSV handler and systick
 
 .equ STACK_TOP, 0x20000800
 .text
@@ -38,7 +38,6 @@ start:
   @ pendsv priority
 
 
-
   ldr r0, =0xe000ed22
   mov r1, #0xff
   strb r1, [r0]
@@ -72,20 +71,13 @@ start:
 
 @  cpsie i
 
-
 @ watch 0xe000ed24, 0xe000ed04 ref: arm cortex-m3: 嵌入式系統設計入門 p8-9
-
-  @push {r0}
   mov r1, #0x33
-
 deadloop:
-  nop
   mov r1, #0x22
-@  push {r0}
   b deadloop
 
 pendsv_handle:
-@  bl func1        
   movs r2, #0x12
   nop
   bx lr
@@ -119,10 +111,6 @@ int_isr:
   nop
   movs r1, #0xf
 @  push {r1}
-  bx lr
-
-func1:
-  movs r2, #0x88
   bx lr
 
 .data
