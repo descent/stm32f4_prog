@@ -1,8 +1,21 @@
 CFLAGS=-g
-MYCFLAGS=-Wl,-T./stm32.ld -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
+MYCFLAGS=-fno-common -O0 -g -mcpu=cortex-m3 -mthumb
+MYCFLAGS_NO_LD=-nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
+LD_FLAGS=-Wl,-T./stm32.ld -nostartfiles
+
+all: pendsv_c.bin
 
 %.o:%.S
+	arm-none-eabi-gcc $(MYCFLAGS_NO_LD) $(INC) -c $< 
+	#arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
+
+%.o:%.c
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
+
+pendsv_c.o: stm32.h lib_mygpio_led.h
+
+pendsv_c.elf: pendsv_c.o lib_mygpio_led.o
+	arm-none-eabi-gcc $(LD_FLAGS) -o $@ $^
 
 %.bin:%.elf
 	arm-none-eabi-objcopy -R .data -O binary $< $@
