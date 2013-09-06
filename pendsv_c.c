@@ -9,6 +9,9 @@ int main(void)
   init_led();
 
   __asm__ ("svc 1");
+  GPIO_SetBits(GPIOD, GPIO_Pin_15);
+  /* Insert delay */
+  Delay(0x3FFFFF);
   //test_led_1();
   while(1)
   {
