@@ -62,16 +62,27 @@ start:
 
   @@@@@@@@@@@@@@@@@@@
 
-  ldr r0, =cur_proc
-  ldr r1, =proc_a_ptr
+  ldr r0, =proc_a_sp
+  ldr r1, =proc_a_stack
+  sub r1, #(16*4)
   str r1, [r0]
 
-  ldr r0, =proc_a_ptr
+  ldr r0, =proc_b_sp
+  ldr r1, =proc_b_stack
+  sub r1, #(16*4)
+  str r1, [r0]
+
+  ldr r0, =cur_proc
+  mov r1, #0
+  str r1, [r0]
+
+  ldr r1, =proc_a_sp
+  ldr r0, [r1]
+
   @ ref: scmrtos-code/Ports/CortexM3/GCC/OS_Target_asm.S
   LDR     r4, [r0, #(4 * 14)]     @ Load process entry point into R4
   add     r0, #(4 * 16)           @ emulate context restore
-  ldr r1, [r0]
-  mov sp, r1
+  mov sp, r0
 @  dsb
 @  isb                             @ Insert a barrier
 
@@ -113,31 +124,51 @@ mmf_isr:
 
 svc_isr:
 @  cpsid i @Prevent interruption during context switch
-  mov r0, sp
-  stmdb   r0!, {r4-r11}
-  push {lr}
+
+@  mov r0, sp
+@  stmdb   r0!, {r4-r11}
+
+  push {r4-r11}
+@  push {lr}
 
   @ choice another process
   ldr r1, =cur_proc
-  ldr r3, [r1]
-  ldr r2, =proc_a_ptr
-  ldr r12, =proc_b_ptr
+  ldr r0, [r1]
 
-  cmp r3, r12
+
+  cmp r0, #1
   beq.n 1f
-  @ set to proc_b_ptr
-  str r12, [r1]
+  @ current proc a, switch to proc b
+  ldr r2, =proc_a_sp
+  str sp, [r2] @ save cur process sp
+
+  mov r3, #1
+  str r3, [r1]
+
+  ldr r0, =proc_b_sp
+
   b 2f
 1:
-  @ set to proc_a_ptr
-  str r2, [r1]
+  @ current proc b, switch to proc a
+  ldr r2, =proc_b_sp
+  str sp, [r2] @ save cur process sp
+
+  mov r3, #0
+  str r3, [r1]
+
+  ldr r0, =proc_a_sp
+
 2:
-  ldr r0, [r1]
-  ldr r12, [r0, #(4*16)]
-  mov sp, r12
+
+  ldr r0, [r0]
+  @ldmia   r0!, {R4-R11}     // Restore r4-11 from new process stack
+
+  mov sp, r0
+  pop {R4-R11}     // Restore r4-11 from new process stack
 
 @  cpsie i
-  pop {pc}
+@  pop {pc}
+  bx lr
 
 
 .data
@@ -185,6 +216,11 @@ proc_b_ptr:
 stack_frame_b:
 #endif
 
+proc_a_sp:
+.word 1
+proc_b_sp:
+.word 2
+
 proc_a_ptr:
 .space  0x300, 0
 proc_a_stack:
@@ -192,6 +228,8 @@ proc_a_stack:
 proc_b_ptr:
 .space  0x300, 0
 proc_b_stack:
+
+
 cur_proc:
 .word 
 
