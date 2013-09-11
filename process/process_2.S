@@ -31,10 +31,6 @@ start:
   @ init a proc
   ldr r0, =proc_a_stack
 
-  @ setup proc a stack
-  ldr r1, =proc_a_stack
-  str r1, [r0]
-
   @ setup proc a psr
   mov r1, #0x21000000
   str r1, [r0, #(-4)]
@@ -47,10 +43,6 @@ start:
 
   @ init b proc
   ldr r0, =proc_b_stack
-
-  @ setup proc b stack
-  ldr r1, =proc_b_stack
-  str r1, [r0]
 
   @ setup proc b psr
   mov r1, #0x21000000
@@ -84,22 +76,44 @@ start:
   add     r0, #(4 * 16)           @ emulate context restore
   mov sp, r0
 @  dsb
-@  isb                             @ Insert a barrier
+  isb                             @ Insert a barrier
 
   bx r4                           @ run proc_a
 
 .type proc_a, function @ let lsb to 1
 proc_a:
-  movs r0, #1
-@  movs r4, #2
+  movs r0, #0x10
+  movs r1, #0x11
+  movs r2, #0x12
+  movs r3, #0x13
+  movs r4, #0x14
+  movs r5, #0x15
+  movs r6, #0x16
+  movs r7, #0x17
+  movs r8, #0x18
+  movs r9, #0x19
+  movs r10, #0x1a
+  movs r11, #0x1b
+  movs r12, #0x1c
   svc 0
   nop
   b proc_a
 
 .type proc_b, function @ let lsb to 1
 proc_b:
-  movs r0, #8
-@  movs r4, #9
+  movs r0, #0x20
+  movs r1, #0x21
+  movs r2, #0x22
+  movs r3, #0x23
+  movs r4, #0x24
+  movs r5, #0x25
+  movs r6, #0x26
+  movs r7, #0x27
+  movs r8, #0x28
+  movs r9, #0x29
+  movs r10, #0x2a
+  movs r11, #0x2b
+  movs r12, #0x2c
   nop
   svc 0
   b proc_b
@@ -123,13 +137,9 @@ mmf_isr:
   bx lr
 
 svc_isr:
-@  cpsid i @Prevent interruption during context switch
-
-@  mov r0, sp
-@  stmdb   r0!, {r4-r11}
+  cpsid i @Prevent interruption during context switch
 
   push {r4-r11}
-@  push {lr}
 
   @ choice another process
   ldr r1, =cur_proc
@@ -161,60 +171,15 @@ svc_isr:
 2:
 
   ldr r0, [r0]
-  @ldmia   r0!, {R4-R11}     // Restore r4-11 from new process stack
 
   mov sp, r0
   pop {R4-R11}     // Restore r4-11 from new process stack
 
-@  cpsie i
-@  pop {pc}
+  cpsie i
   bx lr
 
 
 .data
-#if 0
-proc_a_ptr:
-.word 1 @r11
-.word 1 @r10
-.word 1 @r9
-.word 1 @r8
-.word 1 @r7
-.word 1 @r6
-.word 1 @r5
-.word 1 @r4
-
-.word 1 @r0
-.word 2 @r1
-.word 3 @r2
-.word 0 @r3
-.word 0 @r12
-.word del_func @lr @ del_func
-.word proc_b @pc @ proc_b
-.word 0x21000000 @psr
-.word =proc_a_stack @currnet process stack pointer
-stack_frame_a:
-
-proc_b_ptr:
-.word 1 @r11
-.word 1 @r10
-.word 1 @r9
-.word 1 @r8
-.word 1 @r7
-.word 1 @r6
-.word 1 @r5
-.word 1 @r4
-
-.word 1 @r0
-.word 2 @r1
-.word 3 @r2
-.word 0 @r3
-.word 0 @r12
-.word del_func @lr @ del_func
-.word proc_a @pc @ proc_a
-.word 0x21000000 @psr
-.word =proc_b_stack @currnet process stack pointer
-stack_frame_b:
-#endif
 
 proc_a_sp:
 .word 1
