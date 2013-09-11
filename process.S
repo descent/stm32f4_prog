@@ -30,46 +30,21 @@ _start:
   .word int_isr+1
 
 start:
-  ldr r5, =cur_proc
-  mov r1, #0
-  str r1, [r5]
-
-  movs r3, #3
-  movs r5, #5
-  @ldr r1, [r0, #4]!
-
   ldr r0, =stack_frame_a
 
-@  ldr r1, =del_func
-@  str r1, [r0, #20] @ setup lr
-
-  ldr r1,=#0xffffffff
+  ldr r1,=#0xfffffff9
   str r1, [r0, #20] @ setup lr
 
-  @ldr r1, =proc_a
   adr r1, proc_a
   str r1, [r0, #24] @ setup pc
-@  mov r1, #0x21000000
   mov r1, #0x1000000
   str r1, [r0, #28] @ setup psr
 
-@  ldr lr, =#0xfffffff9
-
-@  ldr sp,=#0x20000060
-@  ldr sp, [r0, #32]
-
-@  bx lr
-
-
-
-
+  @@@@@@@@@@@@@@@@@@@@@
 
   ldr r0, =stack_frame_b
 
-@  ldr r1, =del_func
-@  str r1, [r0, #20] @ setup lr
-
-  ldr r1,=#0xffffffff
+  ldr r1,=#0xfffffff9
   str r1, [r0, #20] @ setup lr
 
   ldr r1, =proc_b
@@ -77,11 +52,11 @@ start:
   mov r1, #0x1000000
   str r1, [r0, #28] @ setup psr
 
+  @@@@@@@@@@@@@@@@@@@@@
+  ldr r5, =cur_proc
+  mov r1, #0
+  str r1, [r5]
 
-  @ldr sp, =stack_frame_a
-  @mov r0, #0x20000100
-  @ldr sp, [r0, #16]
-@  ldr sp,=#0x20000040
   svc 0
 
 deadloop:
@@ -90,7 +65,6 @@ deadloop:
 .type proc_a, function @ let lsb to 1
 proc_a:
   movs r0, #1
-  nop
   svc 0
   nop
   b proc_a
@@ -100,13 +74,7 @@ proc_b:
   movs r1, #2
   nop
   svc 0
-  nop
   b proc_b
-
-.type del_func, function @ let lsb to 1
-del_func:
-  mov r5, #5
-  b del_func
 
 int_isr:
   movs r5, #5
@@ -121,36 +89,27 @@ int_isr:
 
   str r1, [r5]
   bx lr
-  #movs pc, proc_a
-
-
-#.bss
-#.section ".stackarea"
 .data
 
-sram_begin:
-.space  0x40, 0
-STACK_TOP:
-
 stack_frame_a:
-.word 1 @r0
-.word proc_a @r1
-.word 3 @r2
-.word 0 @r3
-.word 0 @r12
-.word del_func @lr @ del_func
-.word proc_a @pc @ proc_a
-.word 0x21000000 @psr
+.word 9 @r0
+.word 8 @r1
+.word 7 @r2
+.word 6 @r3
+.word 5 @r12
+.word 4 @lr 
+.word 3 @pc @ proc_a
+.word 2 @psr
 
 stack_frame_b:
-.word 0 @r0
-.word 0 @r1
-.word 0 @r2
-.word 0 @r3
-.word 0 @r12
-.word del_func @lr
-.word proc_b @pc
-.word 0x21000000 @psr
+.word 1 @r0
+.word 2 @r1
+.word 3 @r2
+.word 4 @r3
+.word 5 @r12
+.word 6 @lr
+.word 7 @pc
+.word 8 @psr
 
 cur_proc:
 .word 1
