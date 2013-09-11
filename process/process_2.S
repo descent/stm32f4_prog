@@ -95,6 +95,7 @@ proc_a:
   movs r10, #0x1a
   movs r11, #0x1b
   movs r12, #0x1c
+  push {r0}
   svc 0
   nop
   b proc_a
@@ -144,7 +145,6 @@ svc_isr:
   @ choice another process
   ldr r1, =cur_proc
   ldr r0, [r1]
-
 
   cmp r0, #1
   beq.n 1f
