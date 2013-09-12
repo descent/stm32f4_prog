@@ -21,13 +21,28 @@ _start:
   .word svc_isr+1 @ svc isr
   .word int_isr+1
   .word int_isr+1
-  .word int_isr+1
-  .word int_isr+1
+  .word pendsv_handle+1
+  .word systick_isr+1
   .word int_isr+1
   .word int_isr+1
   .word int_isr+1
 
 start:
+  @ pendsv priority
+  ldr r0, =0xe000ed22
+  mov r1, #0xff
+  strb r1, [r0]
+
+  @ systick priority
+  ldr r0, =0xe000ed23
+  mov r1, #0xff
+  strb r1, [r0]
+
+  @ svc priority
+  ldr r0, =0xe000ed1f
+  mov r1, #0xff
+  strb r1, [r0]
+
   @ init a proc
   ldr r0, =proc_a_stack
 
@@ -78,26 +93,32 @@ start:
 @  dsb
   isb                             @ Insert a barrier
 
-  bx r4                           @ run proc_a
+@ systick setting
+#if 1
+@ 0xe000ed24 check systick isr active
+@ 0xe000e018 check systick count
+@ ref: arm cortex-m3: 嵌入式系統設計入門 p8-12
+
+  ldr r0, =0xe000e010 @ SysTick Ctrl & Status Reg
+  mov r1, #0
+  str r1, [r0]
+  ldr r1, =0x3fff
+  str r1, [r0, #4]
+  str r1, [r0, #8]
+  mov r1, #0x7
+  str r1, [r0] @ enable systick
+#endif
+
+  cpsie   i @ Enable interrupts at processor level
+
+  bx r4 @ run proc_a
 
 .type proc_a, function @ let lsb to 1
 proc_a:
-  movs r0, #0x10
-  movs r1, #0x11
-  movs r2, #0x12
-  movs r3, #0x13
-  movs r4, #0x14
-  movs r5, #0x15
-  movs r6, #0x16
-  movs r7, #0x17
-  movs r8, #0x18
-  movs r9, #0x19
-  movs r10, #0x1a
-  movs r11, #0x1b
-  movs r12, #0x1c
+  movs r0, #0x90
   push {r0}
-  svc 0
-  nop
+  movs r1, #0x91
+  pop {r0}
   b proc_a
 
 .type proc_b, function @ let lsb to 1
@@ -120,11 +141,6 @@ proc_b:
   b proc_b
 
 
-.type del_func, function @ let lsb to 1
-del_func:
-  mov r5, #5
-  b del_func
-
 int_isr:
   mov r0, #67
   bx lr
@@ -137,7 +153,20 @@ mmf_isr:
   mov r0, #0x3a
   bx lr
 
+systick_isr:
+#if 1
+  @ enable pendsv ref: STM32F207 高性能网络型 MCU 嵌入式系统设计 p 412
+  ldr r0, =0xe000ed04
+  ldr r1, [r0]
+  orr r1, #0x10000000
+  str r1, [r0]
+#endif
+  bx lr
+
 svc_isr:
+  bx lr
+
+pendsv_handle:
   cpsid i @Prevent interruption during context switch
 
   push {r4-r11}
