@@ -1,14 +1,15 @@
 CFLAGS=-g
-MYCFLAGS=-fno-common -O0 -g -mcpu=cortex-m3 -mthumb
+MYCFLAGS=-fno-common -O0 -g -mcpu=cortex-m3 -mthumb -std=c99
 MYCFLAGS_NO_LD=-nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
 LD_FLAGS=-Wl,-T./stm32.ld -nostartfiles
+INC=-I ../../inc
 
 all: cs.bin
 
 %.bin:%.elf
-	arm-none-eabi-objcopy -R .data -O binary $< $@
+	arm-none-eabi-objcopy -O binary $< $@
 
-cs.elf: cs.o stm32.o
+cs.elf: asm_func.o cs.o stm32.o ../../dslib/libperi.a
 	arm-none-eabi-gcc $(LD_FLAGS) -o $@ $^
 
 %.o:%.S
