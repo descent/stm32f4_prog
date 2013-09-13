@@ -14,24 +14,24 @@ void ResetISR(void)
   mymain();
 }
 
-void pendsv_isr(void)
-{
-  int i=5;
-
-  ++i;
-}
-
 void svc_isr(void)
 {
 }
 
 void systick_isr(void)
 {
+  // pendsv set:
+  //ref: @ Cortex™-M3 Technical Reference Manual (file name: DDI0337E_cortex_m3_r1p1_trm.pdf) p8-19
+  *( unsigned long *) 0xE000ED04 |= 0x10000000;
 }
 
 void int_isr(void)
 {
+  int i=6;
+  ++i;
 }
+
+void pendsv_isr(void);
 
 __attribute__((section(".isr_vector")))
 pfnISR VectorTable[]=
