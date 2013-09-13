@@ -57,7 +57,7 @@ void init_proc(void)
 {
   for (int i=0 ; i < NR_NATIVE_PROCS ; ++i)
   {
-    user_proc_table[i].stack_pointer = proc_stack + A_PROC_STACK*i - 16*4;
+    user_proc_table[i].stack_pointer = proc_stack + A_PROC_STACK*(i+1) - 16*4;
     *((int*)(user_proc_table[i].stack_pointer + 14*4)) = *((int *)(&(user_proc_table[i].exec))); // setup pc
   }
 }
