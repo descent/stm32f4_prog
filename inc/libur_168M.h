@@ -1,0 +1,6 @@
+#ifndef LIBUR_168M_H
+#define LIBUR_168M_H
+
+void init_usart(uint32_t baudrate);
+
+#endif
