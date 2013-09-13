@@ -7,17 +7,31 @@
 
 void proc_a()
 {
-  GPIO_ResetBits(GPIOD, GPIO_Pin_14);
-  GPIO_SetBits(GPIOD, GPIO_Pin_15);
-  /* Insert delay */
-  Delay(0x3FFFFF);
+  while(1)
+  {
+    int j=0;
+    ++j;
+  #if 0
+    GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+    GPIO_SetBits(GPIOD, GPIO_Pin_15);
+    /* Insert delay */
+    Delay(0x3FFFFF);
+  #endif
+  }
 }
 
 void proc_b()
 {
-  GPIO_ResetBits(GPIOD, GPIO_Pin_15);
-  Delay(0x3FFFFF);
-  GPIO_SetBits(GPIOD, GPIO_Pin_14);
+  while(1)
+  {
+    int i=0;
+    ++i;
+  #if 0
+    GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+    GPIO_SetBits(GPIOD, GPIO_Pin_14);
+    Delay(0x3FFFFF);
+  #endif
+  }
 }
 
 typedef struct Process_
