@@ -36,9 +36,9 @@ asm_init_systick:
   bx lr
 
 @void pendsv_isr(void)
+.type pendsv_isr, function
 .global pendsv_isr
 pendsv_isr:
-
   cpsid i @Prevent interruption during context switch
 
   push {r4-r11}
