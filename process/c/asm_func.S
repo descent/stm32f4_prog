@@ -44,9 +44,12 @@ pendsv_isr:
   push {r4-r11}
 
   mov r0, sp
-  bl schedule
 
-  ldr r0, [r0]
+  ldr r1, =kernel_stack
+  mov sp, r1
+  push {lr}
+  bl schedule
+  pop {lr}
 
   mov sp, r0
   pop {R4-R11}     // Restore r4-11 from new process stack
@@ -54,5 +57,9 @@ pendsv_isr:
   cpsie i
   bx lr
 
-  bx lr
+
+
+.section .stackares,"aw",%progbits
+.space  0x200, 0
+kernel_stack:
 
