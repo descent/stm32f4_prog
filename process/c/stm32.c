@@ -1,5 +1,18 @@
 #include "stm32.h"
 
+
+extern unsigned long _etext;
+extern unsigned long _data;
+extern unsigned long _edata;
+extern unsigned long _bss;
+extern unsigned long _ebss;
+
+
+#define STACK_SIZE 64
+typedef void (*pfnISR)(void);
+__attribute__((section(".stackares")))
+static unsigned long pulStack[STACK_SIZE];
+
 void ResetISR(void)
 {
   unsigned long *pulSrc, *pulDest;
