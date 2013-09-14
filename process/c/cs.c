@@ -9,13 +9,15 @@ void proc_a()
 {
   while(1)
   {
+  #if 0
     int j=0;
     ++j;
-  #if 0
-    GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+  #else
+    //GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+    //GPIO_ResetBits(GPIOD, GPIO_Pin_13);
     GPIO_SetBits(GPIOD, GPIO_Pin_15);
-    /* Insert delay */
     Delay(0x3FFFFF);
+    /* Insert delay */
   #endif
   }
 }
@@ -24,11 +26,28 @@ void proc_b()
 {
   while(1)
   {
+  #if 0
     int i=0;
     ++i;
-  #if 0
-    GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+  #else
+    //GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+    //GPIO_ResetBits(GPIOD, GPIO_Pin_13);
     GPIO_SetBits(GPIOD, GPIO_Pin_14);
+    Delay(0x3FFFFF);
+  #endif
+  }
+}
+void proc_c()
+{
+  while(1)
+  {
+  #if 0
+    int i=0;
+    ++i;
+  #else
+    //GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+    //GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+    GPIO_SetBits(GPIOD, GPIO_Pin_13);
     Delay(0x3FFFFF);
   #endif
   }
@@ -42,7 +61,7 @@ typedef struct Process_
 
 Process *ready_process;
 
-#define NR_NATIVE_PROCS 2
+#define NR_NATIVE_PROCS 3
 #define A_PROC_STACK 0x400
 #define PROC_STACK (A_PROC_STACK*NR_NATIVE_PROCS)
 char proc_stack[PROC_STACK];
@@ -51,6 +70,7 @@ Process user_proc_table[NR_NATIVE_PROCS] =
 {
   {proc_a, 0},
   {proc_b, 0},
+  {proc_c, 0},
 };
 
 void init_proc(void)
@@ -59,6 +79,7 @@ void init_proc(void)
   {
     user_proc_table[i].stack_pointer = proc_stack + A_PROC_STACK*(i+1) - 16*4;
     *((int*)(user_proc_table[i].stack_pointer + 14*4)) = *((int *)(&(user_proc_table[i].exec))); // setup pc
+    *((int*)(user_proc_table[i].stack_pointer + 15*4)) = 0x21000000; // setup psr
   }
 }
 
@@ -88,6 +109,14 @@ void mymain(void)
 
 u32* schedule(u32* sp)
 {
+#if 0
+  if (ready_process->exec == proc_a)
+    GPIO_ResetBits(GPIOD, GPIO_Pin_13|GPIO_Pin_14);
+  if (ready_process->exec == proc_b)
+    GPIO_ResetBits(GPIOD, GPIO_Pin_13|GPIO_Pin_15);
+  if (ready_process->exec == proc_c)
+    GPIO_ResetBits(GPIOD, GPIO_Pin_14|GPIO_Pin_15);
+#endif
   ready_process->stack_pointer = sp;
   ++ready_process;
   if (ready_process >= user_proc_table+NR_NATIVE_PROCS)
