@@ -10,7 +10,7 @@ extern unsigned long _ebss;
 
 extern "C"
 {
-  int mymain(void);
+  void mymain(void);
 }
 
 void ResetISR(void)

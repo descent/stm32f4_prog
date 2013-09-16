@@ -11,10 +11,10 @@ int print(char c)
 }
 
 
-int mymain(void)
+void mymain(void)
 {
   print(35);
   print('A');
-  return 0;
+  while(1);
 }
 
