@@ -6,8 +6,8 @@ LD_FLAGS=-Wl,-T./stm32.ld -nostartfiles
 all: pendsv_c.bin
 
 %.o:%.S
-	arm-none-eabi-gcc $(MYCFLAGS_NO_LD) $(INC) -c $< 
-	#arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
+	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
+	#arm-none-eabi-gcc $(MYCFLAGS_NO_LD) $(INC) -c $< 
 
 %.o:%.c
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
