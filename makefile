@@ -45,7 +45,7 @@ two_stack.o: two_stack.S
 myc.bin: myc.elf
 	arm-none-eabi-objcopy -Obinary $< $@
 myc.elf: myc.c
-	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -o $@ $< 
+	arm-none-eabi-gcc $(LD_FLAGS) $(INC) -o $@ $< 
 
 proc_periph.bin: proc_periph.elf
 	arm-none-eabi-objcopy -R .data -O binary $< $@
