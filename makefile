@@ -12,6 +12,9 @@ all: pendsv_c.bin
 %.o:%.c
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
 
+systick.elf: systick.o 
+	arm-none-eabi-gcc $(LD_FLAGS) -o $@ $^
+
 pendsv_c.o: stm32.h lib_mygpio_led.h
 
 pendsv_c.elf: pendsv_c.o lib_mygpio_led.o
