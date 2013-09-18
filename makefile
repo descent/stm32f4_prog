@@ -99,6 +99,6 @@ hello.elf: hello.o
 mygpio_led.bin: mygpio_led.elf
 	arm-none-eabi-objcopy -Obinary $< $@
 mygpio_led.elf: mygpio_led.c
-	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -o $@ $< 
+	arm-none-eabi-gcc $(LD_FLAGS) $(INC) -o $@ $< 
 clean:
 	rm -rf *.o *.bin *.elf
