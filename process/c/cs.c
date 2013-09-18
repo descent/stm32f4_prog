@@ -7,6 +7,7 @@
 
 void proc_a()
 {
+  ur_puts(USART2, "proc a\r\n");
   while(1)
   {
   #if 0
@@ -16,6 +17,7 @@ void proc_a()
     GPIO_ResetBits(GPIOD, GPIO_Pin_14);
     //GPIO_ResetBits(GPIOD, GPIO_Pin_13);
     GPIO_SetBits(GPIOD, GPIO_Pin_15);
+    ur_puts(USART2, "aaa\r\n");
     Delay(0x3FFFFF);
     /* Insert delay */
   #endif
@@ -24,6 +26,7 @@ void proc_a()
 
 void proc_b()
 {
+  ur_puts(USART2, "proc b\r\n");
   while(1)
   {
   #if 0
@@ -33,12 +36,14 @@ void proc_b()
     GPIO_ResetBits(GPIOD, GPIO_Pin_15);
     //GPIO_ResetBits(GPIOD, GPIO_Pin_13);
     GPIO_SetBits(GPIOD, GPIO_Pin_14);
+    ur_puts(USART2, "bbb\r\n");
     Delay(0x3FFFFF);
   #endif
   }
 }
 void proc_c()
 {
+  ur_puts(USART2, "proc c\r\n");
   while(1)
   {
   #if 0
@@ -48,6 +53,7 @@ void proc_c()
     //GPIO_ResetBits(GPIOD, GPIO_Pin_15);
     //GPIO_ResetBits(GPIOD, GPIO_Pin_14);
     GPIO_SetBits(GPIOD, GPIO_Pin_13);
+    ur_puts(USART2, "ccc\r\n");
     Delay(0x3FFFFF);
   #endif
   }
@@ -98,6 +104,7 @@ void init_isr_priority()
 void mymain(void)
 {
   init_usart(115200);
+  ur_puts(USART2, "Init complete! Hello World!\r\n");
   init_led();
   init_proc();
   init_isr_priority();
