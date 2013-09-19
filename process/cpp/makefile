@@ -1,0 +1,25 @@
+CFLAGS=-g
+MYCFLAGS=-fno-common -O0 -g -mcpu=cortex-m3 -mthumb -std=c++11 -fno-exceptions -fno-rtti -ffreestanding
+MYCFLAGS_NO_LD=-nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
+LD_FLAGS=-Wl,-T./stm32.ld -nostartfiles -ffreestanding
+INC=-I ../../inc
+
+CXX=arm-none-eabi-g++
+
+all: cs.bin
+
+%.bin:%.elf
+	arm-none-eabi-objcopy -O binary $< $@
+
+cs.elf: asm_func.o cs.o stm32.o dslib/libperi.a
+	$(CXX) $(LD_FLAGS) -o $@ $^
+
+%.o:%.S
+	$(CXX) $(MYCFLAGS) $(INC) -c $< 
+
+%.o:%.cpp
+	$(CXX) $(MYCFLAGS) $(INC) -c $< 
+cs.o: cs.cpp stm32.h
+
+clean:
+	rm -rf *.o *.bin *.elf
