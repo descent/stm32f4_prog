@@ -31,12 +31,16 @@ void ResetISR(void)
   mymain();
 }
 
+#if 0
 void svc_isr(void)
 {
 }
+#endif
 
+int ticks;
 void systick_isr(void)
 {
+  ++ticks;
   // pendsv set:
   //ref: @ Cortex™-M3 Technical Reference Manual (file name: DDI0337E_cortex_m3_r1p1_trm.pdf) p8-19
   *( unsigned long *) 0xE000ED04 |= 0x10000000;
