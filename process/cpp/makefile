@@ -14,6 +14,8 @@ all: cs.bin
 cs.elf: asm_func.o cs.o stm32.o dslib/libperi.a
 	$(CXX) $(LD_FLAGS) -o $@ $^
 
+dslib/libperi.a: 
+	(cd dslib;make)
 %.o:%.S
 	$(CXX) $(MYCFLAGS) $(INC) -c $< 
 
@@ -22,4 +24,4 @@ cs.elf: asm_func.o cs.o stm32.o dslib/libperi.a
 cs.o: cs.cpp stm32.h
 
 clean:
-	rm -rf *.o *.bin *.elf
+	rm -rf *.bin *.elf dslib/libperi.a ; find . -name  "*.o" -exec rm -f {} \;
