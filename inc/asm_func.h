@@ -8,6 +8,7 @@ extern "C"
 void run(char* sp);
 void asm_init_systick();
 void pendsv_isr(void);
+void svc_isr(void);
 #ifdef __cplusplus
 }
 #endif
