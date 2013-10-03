@@ -11,7 +11,9 @@ all: cs.bin
 %.bin:%.elf
 	arm-none-eabi-objcopy -O binary $< $@
 
-cs.elf: asm_func.o cs.o stm32.o dslib/libperi.a
+OBJS = asm_func.o cs.o stm32.o asm_syscall.o syscall.o
+
+cs.elf: $(OBJS) dslib/libperi.a
 	$(CXX) $(LD_FLAGS) -o $@ $^
 
 dslib/libperi.a: 
