@@ -35,14 +35,34 @@ asm_init_systick:
   str r1, [r0] @ enable systick
   bx lr
 
+.type svc_isr, function
+.global svc_isr
+svc_isr:
+  cpsid i @Prevent interruption during context switch
+  push {r4-r11}
+  mov r0, sp
+
+  ldr r1, =kernel_stack
+  mov sp, r1
+  push {lr}
+
+  @ run sys_call_func
+  @ get svc number
+
+  pop {lr}
+
+  mov sp, r0
+  pop {R4-R11}     // Restore r4-11 from new process stack
+
+  cpsie i
+  bx lr
+
 @void pendsv_isr(void)
 .type pendsv_isr, function
 .global pendsv_isr
 pendsv_isr:
   cpsid i @Prevent interruption during context switch
-
   push {r4-r11}
-
   mov r0, sp
 
   ldr r1, =kernel_stack
