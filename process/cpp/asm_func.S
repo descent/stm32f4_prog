@@ -38,9 +38,10 @@ asm_init_systick:
 .type svc_isr, function
 .global svc_isr
 svc_isr:
-  cpsid i @Prevent interruption during context switch
+  cpsid i @Prevent interruption during svc
   push {r4-r11}
   mov r0, sp
+  bl save_cur_proc_stack
 
   ldr r1, =kernel_stack
   mov sp, r1
@@ -48,9 +49,11 @@ svc_isr:
 
   @ run sys_call_func
   @ get svc number
+  ldr r1, =sys_call_table
 
   pop {lr}
 
+  bl restore_cur_proc_stack
   mov sp, r0
   pop {R4-R11}     // Restore r4-11 from new process stack
 
