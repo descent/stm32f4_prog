@@ -5,8 +5,13 @@
 #include "libur_168M.h"
 #include "asm_func.h"
 
+#include <cstdio>
+
+using namespace std;
+
 void proc_a()
 {
+  //printf("abc");
   ur_puts(USART2, "proc a\r\n");
   while(1)
   {
@@ -105,6 +110,8 @@ extern "C"
 {
   void mymain(void);
   char* schedule(char* sp);
+  void save_cur_proc_stack(char *sp);
+  char* restore_cur_proc_stack();
 }
 
 
@@ -119,6 +126,16 @@ void mymain(void)
   run(ready_process->stack_pointer);
 
   while(1);
+}
+
+void save_cur_proc_stack(char *sp)
+{
+  ready_process->stack_pointer = sp;
+}
+
+char* restore_cur_proc_stack()
+{
+  return ready_process->stack_pointer;
 }
 
 char* schedule(char* sp)
