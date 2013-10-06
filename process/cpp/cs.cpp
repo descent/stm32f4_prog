@@ -15,6 +15,8 @@ void proc_a()
   ur_puts(USART2, "proc a\r\n");
   while(1)
   {
+    int t = get_ticks();
+
   #if 0
     int j=0;
     ++j;
