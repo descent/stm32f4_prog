@@ -1,29 +1,34 @@
 #include "asm_syscall.h"
 
 typedef void* SystemCall;
-typedef int (*FuncPtr)();
 
 struct Arg
 {
+  int ret;
 };
 
-int sys_get_ticks()
+typedef void (*FuncPtr)(Arg *);
+
+void sys_get_ticks(Arg *arg)
 {
   extern int ticks;
-  return ticks;
+
+  arg->ret = ticks;
+  //return ticks;
 }
 
 // ref: http://www.coactionos.com/embedded-design/133-effective-use-of-arm-cortex-m3-svcall.html
-void service_call(FuncPtr func_ptr, Arg *arg)
+int service_call(FuncPtr func_ptr, Arg *arg)
 {
   __asm__ volatile("svc 0");
 }
 
 int get_ticks()
 {
-  Arg *arg=0;
+  Arg arg;
 
-  service_call(sys_get_ticks, arg);
+  service_call(sys_get_ticks, &arg);
+  return arg.ret;
 }
 
 SystemCall sys_call_table[NR_SYS_CALL] = {(void*)sys_get_ticks};
