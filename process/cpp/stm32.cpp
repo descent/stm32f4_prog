@@ -1,5 +1,6 @@
 #include "stm32.h"
 #include "asm_func.h"
+#include "process.h"
 
 extern unsigned long _etext;
 extern unsigned long _data;
@@ -34,6 +35,34 @@ void ResetISR(void)
 #if 0
 void svc_isr(void)
 {
+  extern Process *ready_process;
+  extern char *kernel_stack;
+  int tmp;
+
+  __asm__ volatile ("cpsid i"); // Prevent interruption during svc
+  __asm__ volatile ("push {r4-r11}");
+  __asm__ volatile ("mov r0, sp");
+
+  // save sp to current process
+  __asm__ volatile ("mov %0, sp\n"
+                     :"=r"(ready_process->stack_pointer)
+                     :
+                     :
+                   );
+
+
+  __asm__ volatile ("mov r1, %0\n"
+                     :
+                     : "r"(kernel_stack)
+                     :
+                   );
+
+  __asm__ volatile ("mov sp, r1");
+  __asm__ volatile ("push {lr}");
+
+
+
+
 }
 #endif
 
