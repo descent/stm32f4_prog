@@ -4,6 +4,8 @@
 #include "lib_mygpio_led.h"
 #include "libur_168M.h"
 #include "asm_func.h"
+#include "syscall.h"
+#include "process.h"
 
 #include <cstdio>
 
@@ -66,25 +68,22 @@ void proc_c()
   }
 }
 
-typedef struct Process_
+
+
+
+//Process user_proc_table[NR_NATIVE_PROCS] =
+Process user_proc_table[] =
 {
-  void (*exec)(void);
-  char *stack_pointer;  
-}Process;
+  {proc_a, 0},
+//  {proc_b, 0},
+//  {proc_c, 0},
+};
 
-Process *ready_process;
+const int NR_NATIVE_PROCS = sizeof(user_proc_table)/sizeof(Process);
 
-#define NR_NATIVE_PROCS 3
 #define A_PROC_STACK 0x400
 #define PROC_STACK (A_PROC_STACK*NR_NATIVE_PROCS)
 char proc_stack[PROC_STACK];
-
-Process user_proc_table[NR_NATIVE_PROCS] =
-{
-  {proc_a, 0},
-  {proc_b, 0},
-  {proc_c, 0},
-};
 
 void init_proc(void)
 {
