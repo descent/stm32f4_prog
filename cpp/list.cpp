@@ -3,9 +3,7 @@
 
 using namespace std;
 
-struct list_head {
- struct list_head *next, *prev;
-};
+#include "stm32.h"
 
 template <typename type>
 class List
@@ -40,14 +38,16 @@ struct page
 };
 
 
-int main()
+void mymain()
 {
   page p1, p2;
   List<page> node1(&p1), node2(&p2);
   List<page> *head;
 
+#if 0
   printf("%p\n", &p1);
   printf("%p\n", &p2);
+#endif
 
   //node1.set_item(p1);
   //node2.set_item(p2);
@@ -56,7 +56,8 @@ int main()
   head = &node1;
   for (List<page> *cur=head ; cur ; cur=cur->next())
   {
-    printf("%p\n", cur->item());
+    page *cur_page =  cur->item();
+    //printf("%p\n", cur->item());
   }
 
 #if 0
