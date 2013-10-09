@@ -54,11 +54,13 @@ void mymain()
 
   node1.add_next(&node2);
   head = &node1;
+  page *cur_page = 0;
   for (List<page> *cur=head ; cur ; cur=cur->next())
   {
-    page *cur_page =  cur->item();
+    cur_page =  cur->item();
     //printf("%p\n", cur->item());
   }
+  while(1);
 
 #if 0
 
