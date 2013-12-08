@@ -41,6 +41,16 @@ void svc_isr(void)
 void systick_isr(void)
 {
 }
+
+void mm_isr(void)
+{
+  int i=5;
+}
+
+void hard_fault_isr(void)
+{
+}
+
 void int_isr(void)
 {
 }
@@ -55,8 +65,8 @@ pfnISR VectorTable[]=
   (pfnISR)((unsigned long)pulStack+sizeof(pulStack)),
   ResetISR, // 1
   int_isr,
-  int_isr,
-  int_isr,
+  hard_fault_isr,
+  mm_isr,
   int_isr,
   int_isr,
   int_isr,
