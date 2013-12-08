@@ -49,6 +49,7 @@ void mm_isr(void)
 
 void hard_fault_isr(void)
 {
+  //watch 0xe000ed04
 }
 
 void int_isr(void)
