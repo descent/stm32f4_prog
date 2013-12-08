@@ -1,6 +1,11 @@
 #ifndef STM32_H
 #define STM32_H
 
+#include "type.h"
+
+#define SYSTEM_HANDLER_CTRL_STATE_REG_ADDR 0xe000ed24
+#define SYSTEM_HANDLER_CTRL_STATE_REG (*((u32 volatile *)SYSTEM_HANDLER_CTRL_STATE_REG_ADDR))
+
 #define STACK_SIZE 64
 extern unsigned long _etext;
 extern unsigned long _data;
@@ -44,7 +49,8 @@ void systick_isr(void)
 
 void mm_isr(void)
 {
-  int i=5;
+  int ii=6;
+  //SYSTEM_HANDLER_CTRL_STATE_REG &= (~(1 << 16));
 }
 
 void hard_fault_isr(void)
