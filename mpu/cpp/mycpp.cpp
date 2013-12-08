@@ -2,28 +2,6 @@
 #include "stm32.h"
 #include "type.h"
 
-extern u32 mpu_reg1_begin_;
-extern u32 mpu_reg1_end_;
-
-__attribute__ ((section (".mpu_r1")))
-int reg1[256];
-
-bool init_mpu();
-
-// ref: http://blog.feabhas.com/2013/02/setting-up-the-cortex-m34-armv7-m-memory-protection-unit-mpu/
-// mymain is extern "C" declare
-void mymain()
-{
-  init_mpu();
-  reg1[0] = 10;
-  //int a = reg1[0];
-  int i=5;
-  while(1)
-  {
-    i++;
-  }
-}
-
 #define MPU_TYPE_REG_ADDR 0xe000ed90
 #define MPU_TYPE_REG (*((u32 volatile *)MPU_TYPE_REG_ADDR))
 
@@ -38,6 +16,40 @@ void mymain()
 
 #define MPU_ATTR_SIZE_REG_ADDR 0xe000eda0
 #define MPU_ATTR_SIZE_REG (*((u32 volatile *)MPU_ATTR_SIZE_REG_ADDR))
+
+extern u32 mpu_reg1_begin_;
+extern u32 mpu_reg1_end_;
+
+extern u32 mpu_reg2_begin_, mpu_reg2_end_;
+
+__attribute__ ((section (".mpu_r1")))
+int reg1[256];
+
+__attribute__ ((section (".mpu_r2")))
+void test_mpu()
+{
+  int i=1;
+  ++i;
+}
+
+bool init_mpu();
+
+// ref: http://blog.feabhas.com/2013/02/setting-up-the-cortex-m34-armv7-m-memory-protection-unit-mpu/
+// mymain is extern "C" declare
+void mymain()
+{
+  SYSTEM_HANDLER_CTRL_STATE_REG |= (1 << 16); // enable mem-fault exception
+  init_mpu();
+  reg1[0] = 10;
+  //int a = reg1[0];
+  //test_mpu();
+  int i=5;
+  while(1)
+  {
+    i++;
+  }
+}
+
 
 // ref: arm cortex-m3: 嵌入式系統設計入門 p13-9
 bool init_mpu()
@@ -55,14 +67,12 @@ bool init_mpu()
 
   if (MPU_TYPE_REG == 0) // there is no mpu
     return false;
-#if 1
+
   // base 0x0, 4g size
   MPU_NUM_REG = 0;
   MPU_BASE_REG = 0;
   MPU_ATTR_SIZE_REG = 0x307003f;
   //(*((u32 volatile *)MPU_BASE_REG_ADDR)) = 0x307002f;
-#else
-#endif
   MPU_NUM_REG = 1;
   MPU_BASE_REG = (u32)&mpu_reg1_begin_;
   MPU_ATTR_SIZE_REG = 0x707000F; // read only
@@ -71,6 +81,13 @@ bool init_mpu()
   // size: 256 byte
   // S: 1, C: 1, B: 1
   // TEX: 000
+
+#if 0
+  MPU_NUM_REG = 2;
+  MPU_BASE_REG = (u32)&mpu_reg2_begin_;
+  MPU_ATTR_SIZE_REG = 0x1007000F;
+  // disable execute
+#endif
 
   MPU_CTRL_REG = 1; // enable MPU
 
