@@ -23,6 +23,10 @@ SECTIONS
     KEEP(*(.isr_vector .isr_vector.*))
     *(.text .text.*)
     *(.rodata .rodata*)
+    . += 0x10;
+    mpu_reg2_begin_ = .;
+    *(.mpu_r2)
+    mpu_reg2_end_ = .;
     _etext = .;
   } > FLASH
 
@@ -68,6 +72,7 @@ SECTIONS
     . = ALIGN(4);
     mpu_reg1_end_ = .;
   } > SRAM
+
 
   . = ALIGN(4);
   _end = .;
