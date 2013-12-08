@@ -16,6 +16,7 @@ void mymain()
 {
   init_mpu();
   reg1[0] = 10;
+  //int a = reg1[0];
   int i=5;
   while(1)
   {
@@ -64,8 +65,8 @@ bool init_mpu()
 #endif
   MPU_NUM_REG = 1;
   MPU_BASE_REG = (u32)&mpu_reg1_begin_;
-  //MPU_ATTR_SIZE_REG = 0x707000F; // read only
-  MPU_ATTR_SIZE_REG = 0x307000F; // r/w
+  MPU_ATTR_SIZE_REG = 0x707000F; // read only
+  //MPU_ATTR_SIZE_REG = 0x307000F; // r/w
   // ap: 111 read only
   // size: 256 byte
   // S: 1, C: 1, B: 1
