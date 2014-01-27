@@ -57,6 +57,29 @@ void int_isr(void)
 {
 }
 
+void wwdg_isr(void)
+{
+}
+void pvd_isr(void)
+{
+}
+void tamp_stamp_isr(void)
+{
+}
+
+void rtc_wkup_isr(void)
+{
+}
+void flash_isr(void)
+{
+}
+void rcc_isr(void)
+{
+}
+void exti0_isr(void)
+{
+}
+
 typedef void (*pfnISR)(void);
 __attribute__((section(".stackares")))
 static unsigned long pulStack[STACK_SIZE];
@@ -80,7 +103,16 @@ pfnISR VectorTable[]=
   int_isr,
   int_isr,
   pendsv_isr, // 14
-  systick_isr // 15
+  systick_isr, // 15
+
+  // External Interrupts
+  wwdg_isr,                   // Window WatchDog
+  pvd_isr,                   // PVD through EXTI Line detection                      
+  tamp_stamp_isr,            // Tamper and TimeStamps through the EXTI line
+  rtc_wkup_isr,              // RTC Wakeup through the EXTI line                     
+  flash_isr,                 // FLASH                                           
+  rcc_isr,                   // RCC                                             
+  exti0_isr                  // EXTI Line0 
 };
 
 #endif
