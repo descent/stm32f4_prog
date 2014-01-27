@@ -12,6 +12,9 @@ all: pendsv_c.bin
 %.o:%.c
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
 
+user_button.elf: user_button.o 
+	arm-none-eabi-gcc $(LD_FLAGS) -o $@ $^
+
 systick.elf: systick.o 
 	arm-none-eabi-gcc $(LD_FLAGS) -o $@ $^
 
@@ -59,6 +62,7 @@ proc_periph.o: proc_periph.S
 
 gpio_led.o: gpio_led.c gpio_led.h
 	arm-none-eabi-gcc $(CFLAGS) -mcpu=cortex-m3 -mthumb -nostartfiles -c $<
+
 
 myur_led.bin: myur_led.elf
 	arm-none-eabi-objcopy -Obinary $< $@
