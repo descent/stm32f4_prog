@@ -147,6 +147,42 @@ int init_stm32f4(void)
   GPIO_Init(GPIOA, &GPIO_InitStructure);   
 }
 
+#if 0
+ref: 
+https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Discovery/Flat.aspx?RootFolder=%2Fpublic%2FSTe2ecommunities%2Fmcu%2FLists%2FSTM32Discovery%2Fexternal%20interrupt%20issue&FolderCTID=0x01200200770978C69A1141439FE559EB459D75800084C20D8867EAD444A5987D47BE638E0F&currentviews=374
+
+
+   /* Connect EXTI Line0 to PA0 pin via SYSCFG */
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+     
+    /* Configure EXTI Line0 */
+     EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising; 
+     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+     EXTI_Init(&EXTI_InitStructure);
+      
+     /* Enable and set EXTI Line0 Interrupt to the lowest priority */
+     NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
+     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
+     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
+     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+     NVIC_Init(&NVIC_InitStructure);
+
+
+DM00031020.pdf 
+chapter 8: System configuration controller (SYSCFG)
+
+The system configuration controller is mainly used to remap the memory accessible in the 
+code area, select the Ethernet PHY interface and manage the "external interrupt line" connection to the GPIOs.
+
+SYSCFG external interrupt configuration register 1
+(SYSCFG_EXTICR1)
+Address offset: 0x08
+Reset value: 0x0000
+#endif
+
+
 int main(void)
 {
   init_stm32f4();
