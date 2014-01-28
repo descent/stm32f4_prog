@@ -59,6 +59,7 @@ void int_isr(void)
 
 void wwdg_isr(void)
 {
+  int b=33;
 }
 void pvd_isr(void)
 {
@@ -76,9 +77,9 @@ void flash_isr(void)
 void rcc_isr(void)
 {
 }
-void exti0_isr(void)
-{
-}
+
+void exti0_isr(void);
+
 
 typedef void (*pfnISR)(void);
 __attribute__((section(".stackares")))
