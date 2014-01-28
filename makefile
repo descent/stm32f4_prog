@@ -12,7 +12,7 @@ all: pendsv_c.bin
 %.o:%.c
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
 
-user_button.elf: user_button.o 
+user_button.elf: user_button.o exti.o syscfg.o
 	arm-none-eabi-gcc $(LD_FLAGS) -o $@ $^
 
 systick.elf: systick.o 
