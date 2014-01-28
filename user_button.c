@@ -6,6 +6,9 @@
 
 #include "stm32f4xx.h"
 #include "stm32f4xx_gpio.h"
+#include "stm32f4xx_exti.h"
+#include "stm32f4xx_syscfg.h"
+#include "stm32f4xx_rcc.h"
 
 #define USE_STDPERIPH_DRIVER
 
@@ -19,6 +22,18 @@ int delay_time = 0x300000;
 void Delay(uint32_t delay )
 {
   while(delay) delay--;
+}
+
+void RCC_APB2PeriphClockCmd(uint32_t RCC_APB2Periph, FunctionalState NewState)
+{
+  if (NewState != DISABLE)
+  {
+    RCC->APB2ENR |= RCC_APB2Periph;
+  }
+  else
+  {
+    RCC->APB2ENR &= ~RCC_APB2Periph;
+  }
 }
 
 
@@ -124,6 +139,7 @@ int init_stm32f4(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
     
+#if 0
   /* GPIOD Periph clock enable */
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
@@ -134,16 +150,23 @@ int init_stm32f4(void)
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
-
+#endif
 
 
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;            // we want to configure PA0
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;         // we want it to be an input
+#ifdef POLL_USER_BUTTON
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;   // this sets the pin type to push / pull (as opposed to open drain)
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//this sets the GPIO modules clock speed
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;   // this enables the pulldown resistor --> we want to detect a high level
+
+#else
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  //GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;   // this enables the pulldown resistor --> we want to detect a high level
+#endif
   GPIO_Init(GPIOA, &GPIO_InitStructure);   
 }
 
@@ -180,6 +203,8 @@ SYSCFG external interrupt configuration register 1
 (SYSCFG_EXTICR1)
 Address offset: 0x08
 Reset value: 0x0000
+
+STM32F4xx_DSP_StdPeriph_Lib_V1.1.0\Project\STM32F4xx_StdPeriph_Examples\EXTI\EXTI_Example\main.c
 #endif
 
 
@@ -188,8 +213,38 @@ int main(void)
   init_stm32f4();
   int p;
 
+  /* Connect EXTI Line0 to PA0 pin */
+  // if no line, it can work.
+  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+
+  EXTI_InitTypeDef   EXTI_InitStructure;// ext interupt structure
+  /* Configure EXTI Line0 */
+  EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  EXTI_Init(&EXTI_InitStructure);
+
+#if 0
+  NVIC_InitTypeDef   NVIC_InitStructure;
+
+  /* Enable and set EXTI Line0 Interrupt to the lowest priority */
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+#endif
+
+#if 1
+  // ref:  arm cortex-m3: 嵌入式系統設計入門 p8-3
+  *(volatile unsigned long*) 0xE000E100 = 0;
+  *(volatile unsigned long*) 0xE000E100 |= (1 << 6);
+#endif
+
   while(1)
   {
+#ifdef POLL_USER_BUTTON
     int i=0;
     if(GPIOA->IDR & 0x0001)
     {
@@ -200,6 +255,18 @@ int main(void)
       i=2;
     }
     p = i;
-
+#else
+    p = 5;
+#endif
   }
 }
+
+void exti0_isr(void)
+{
+  int a=6;
+  
+  // if no line, it will envoke exti0_isr().
+  EXTI_ClearITPendingBit(EXTI_Line0);
+
+}   
+
