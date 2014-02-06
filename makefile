@@ -78,8 +78,8 @@ process.o: process.S
 
 myur.bin: myur.elf
 	arm-none-eabi-objcopy -Obinary $< $@
-myur.elf: myur.c
-	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -o $@ $< 
+myur.elf: myur.o
+	arm-none-eabi-gcc $(LD_FLAGS) -o $@ $^
 
 factorial.bin: factorial.elf
 	arm-none-eabi-objcopy -O binary $< $@
