@@ -12,6 +12,8 @@
 
 #define USE_STDPERIPH_DRIVER
 
+#define EXT_INT
+
 /*!< Uncomment the following line if you need to relocate your vector Table in
      Internal SRAM. */
 /* #define VECT_TAB_SRAM */
