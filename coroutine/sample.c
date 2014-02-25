@@ -27,8 +27,8 @@ char memarea2[128];
 #else
 //#error "Unsupported architecture!"
 #define SAVE_STACK_POINTER_ASM(savedstack, stackptr) \
-	"mov %[savedstack], %%r7\n" /* savedstack <- SP */ \
-	"mov %%r7, %[stackptr]"    /* SP <- stackptr */
+	"mov %[savedstack], %%sp\n" /* savedstack <- SP */ \
+	"mov %%sp, %[stackptr]"    /* SP <- stackptr */
 #endif
 
 
@@ -47,7 +47,7 @@ do { \
 	"movq %[savedstack],%%rsp"
 #else
 #define RESTORE_STACK_ASM(savedstack) \
-	"mov %%r7, %[savedstack]"
+	"mov %%sp, %[savedstack]"
 //#error "Unsupported architecture!"
 #endif
 
