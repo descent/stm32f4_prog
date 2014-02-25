@@ -9,6 +9,9 @@
 
 #define STACK_SIZE 4096
 
+char memarea1[128];
+char memarea2[128];
+
 /*
  * Change SP prior to calling setjmp so that longjmp will
  * start the routine with 'stackptr'.
@@ -24,8 +27,8 @@
 #else
 //#error "Unsupported architecture!"
 #define SAVE_STACK_POINTER_ASM(savedstack, stackptr) \
-	"mov %%r7, %[savedstack]\n" /* savedstack <- SP */ \
-	"mov %[stackptr], %%r7"    /* SP <- stackptr */
+	"mov %[savedstack], %%r7\n" /* savedstack <- SP */ \
+	"mov %%r7, %[stackptr]"    /* SP <- stackptr */
 #endif
 
 
@@ -44,7 +47,7 @@ do { \
 	"movq %[savedstack],%%rsp"
 #else
 #define RESTORE_STACK_ASM(savedstack) \
-	"mov %[savedstack],%%r7"
+	"mov %%r7, %[savedstack]"
 //#error "Unsupported architecture!"
 #endif
 
@@ -130,9 +133,11 @@ void create_routine2(const void *stackptr)
 
 int main(void)
 {
-	create_routine1((char *) malloc(STACK_SIZE) + STACK_SIZE);
-	create_routine2((char *) malloc(STACK_SIZE) + STACK_SIZE);
-	longjmp(routine1_buf, 1);
+  //create_routine1((char *) malloc(STACK_SIZE) + STACK_SIZE);
+  //create_routine2((char *) malloc(STACK_SIZE) + STACK_SIZE);
+  create_routine1(memarea1);
+  create_routine2(memarea2);
+  longjmp(routine1_buf, 1);
 
-	return 0;
+  return 0;
 }
