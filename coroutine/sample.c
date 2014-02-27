@@ -3,6 +3,7 @@
 
 #include "stm32.h"
 #include "my_setjmp.h"
+#include "type.h"
 
 #define setjmp my_setjmp
 #define longjmp my_longjmp
@@ -61,12 +62,67 @@ do { \
 jmp_buf routine1_buf;
 jmp_buf routine2_buf;
 
+// sign version
+char* s32_itoa_s(int n, char* str, int radix)
+{
+  char digit[]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  char* p=str;
+  char* head=str;
+  //int radix = 10;
+
+//  if(!p || radix < 2 || radix > 36)
+//    return p;
+  if (n==0)
+  {
+    *p++='0';
+    *p=0;
+    return str;
+  }
+  if (radix == 10 && n < 0)
+  {
+    *p++='-';
+    n= -n;
+  }
+  while(n)
+  {
+    *p++=digit[n%radix];
+    //s32_put_char(*(p-1), (u8*)(0xb8000+80*2));
+    n/=radix;
+  }
+  *p=0;
+  #if 1
+  for (--p; head < p ; ++head, --p)
+  {
+    char temp=*head;
+    if (*(p-1) != '-')
+    {
+      *head=*p;
+      *p=temp;
+    }
+  }
+  #endif
+  return str;
+}
+
 int exit(int i)
 {
+  while(1);
 }
 
 void *malloc(int size)
 {
+}
+
+
+void print_str(const char *str)
+{
+}
+
+void print_int(int n)
+{
+  char str[20];
+  s32_itoa_s(n, str, 10);
+  print_str(str);
 }
 
 void printf(char *str, ...)
