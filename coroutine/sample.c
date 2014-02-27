@@ -89,10 +89,28 @@ void create_routine1(const void *stackptr)
 {
 	register unsigned long savedstack;
 
-	SAVE_STACK_POINTER(savedstack, stackptr);
+	//SAVE_STACK_POINTER(savedstack, stackptr);
+
+        asm volatile (
+                       "mov %0, %%sp"
+                       :"=r"(savedstack)
+                       :
+                     );
+        asm volatile (
+                       "mov %%sp, %0"
+                       :
+                       :"r"(stackptr)
+                     );
+
 
 	if (setjmp(routine1_buf) == 0) {
-		RESTORE_STACK(savedstack);
+		//RESTORE_STACK(savedstack);
+        asm volatile (
+                       "mov %%sp, %0"
+                       :
+                       :"r"(savedstack)
+                     );
+
 	}
 	else {
 		/* We got here through longjmp */
