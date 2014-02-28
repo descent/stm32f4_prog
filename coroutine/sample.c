@@ -9,6 +9,8 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_usart.h"
+#include "stm32f4xx_exti.h"
+#include "stm32f4xx_syscfg.h"
 
 #define setjmp my_setjmp
 #define longjmp my_longjmp
@@ -34,6 +36,31 @@ static __I uint8_t APBAHBPrescTable[16] = {0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6
 
 char memarea1[128];
 char memarea2[128];
+
+// ref: http://en.wikipedia.org/wiki/ROT13
+char rot13(char c)
+{
+  //char table[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  char table[] = "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm";
+
+  if ('A' <= c && c <= 'Z')
+    return table[c-'A'];
+  if ('a' <= c && c <= 'z')
+    return table[c-'a' + 26];
+  
+}
+
+void RCC_APB2PeriphClockCmd(uint32_t RCC_APB2Periph, FunctionalState NewState)
+{
+  if (NewState != DISABLE)
+  {
+    RCC->APB2ENR |= RCC_APB2Periph;
+  }
+  else
+  {
+    RCC->APB2ENR &= ~RCC_APB2Periph;
+  }
+}
 
 void RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks)
 {
@@ -646,29 +673,82 @@ void create_routine2(const void *stackptr)
 	}
 }
 
+int init_periph(void)
+{
+  GPIO_InitTypeDef GPIO_InitStructure;
+
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;            // we want to configure PA0
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;         // we want it to be an input
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);   
+}
+
+int do_rot13 = 1;
 
 int main(void)
 {
+  do_rot13 = 1;
   init_usart(9600);
+  ur_puts(USART2, "Init complete! Hello World!\r\n");
   //init_command();
 
-  ur_puts(USART2, "Init complete! Hello World!\r\n");
-#if 0
+  init_periph();
+  /* Connect EXTI Line0 to PA0 pin */
+  // if no line, it can work.
+  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+
+  EXTI_InitTypeDef   EXTI_InitStructure;// ext interupt structure
+  /* Configure EXTI Line0 */
+  EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  EXTI_Init(&EXTI_InitStructure);
+  // ref:  arm cortex-m3: 嵌入式系統設計入門 p8-3
+  *(volatile unsigned long*) 0xE000E100 = 0;
+  *(volatile unsigned long*) 0xE000E100 |= (1 << 6);
+#if 1
   while(1)
   {
+    if (do_rot13 == 0) continue;
+
     char ch = get_byte();
     if (ch == '\r') // enter, 0x13
       ur_puts(USART2, "\r\n");
     else
-      USART_SendData(USART2, ch);
+    {
+      if (do_rot13 == 0) continue;
+        USART_SendData(USART2, rot13(ch));
+    }
     //send_string("ur output\n");
   }
 #endif
+#if 0
   //create_routine1((char *) malloc(STACK_SIZE) + STACK_SIZE);
   //create_routine2((char *) malloc(STACK_SIZE) + STACK_SIZE);
   create_routine1(memarea1);
   create_routine2(memarea2);
   longjmp(routine1_buf, 1);
-
+#endif
   return 0;
 }
+
+void user_button_isr(void)
+{
+#if 1
+  if (do_rot13)
+    do_rot13 = 0;
+  else
+    do_rot13 = 1;
+#endif
+  //do_rot13 = !do_rot13;
+  //do_rot13 = 0;
+  //get_byte();
+  
+  // if no line, it will envoke exti0_isr().
+  EXTI_ClearITPendingBit(EXTI_Line0);
+
+}   
