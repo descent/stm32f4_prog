@@ -713,14 +713,12 @@ int main(void)
 #if 1
   while(1)
   {
-    if (do_rot13 == 0) continue;
-
     char ch = get_byte();
     if (ch == '\r') // enter, 0x13
       ur_puts(USART2, "\r\n");
     else
     {
-      if (do_rot13 == 0) continue;
+      if (do_rot13)
         USART_SendData(USART2, rot13(ch));
     }
     //send_string("ur output\n");
@@ -738,12 +736,21 @@ int main(void)
 
 void user_button_isr(void)
 {
+  //do_rot13 = (!do_rot13);
+  ur_puts(USART2, "\r\n");
 #if 1
   if (do_rot13)
+  {
     do_rot13 = 0;
+    ur_puts(USART2, "disable func");
+  }
   else
+  {
     do_rot13 = 1;
+    ur_puts(USART2, "enable func");
+  }
 #endif
+  ur_puts(USART2, "\r\n");
   //do_rot13 = !do_rot13;
   //do_rot13 = 0;
   //get_byte();
