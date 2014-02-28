@@ -13,7 +13,7 @@ all: sample.bin
 %.o:%.c stm32.h
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
 
-sample.elf: sample.o my_setjmp.o
+sample.elf: sample.o my_setjmp.o exti.o syscfg.o
 	arm-none-eabi-gcc $(LD_FLAGS) -o $@ $^
 
 clean:
