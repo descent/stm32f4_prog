@@ -1,5 +1,5 @@
 CFLAGS=-g
-MYCFLAGS=-fno-common -O0 -g -mcpu=cortex-m3 -mthumb -nodefaultlibs -nostdlib -ffreestanding -nostartfiles
+MYCFLAGS=-I.. -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -nodefaultlibs -nostdlib -ffreestanding -nostartfiles
 LD_FLAGS=-Wl,-T./stm32.ld -nostartfiles -nodefaultlibs -nostdlib -ffreestanding -nostartfiles
 
 
