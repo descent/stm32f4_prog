@@ -39,7 +39,6 @@ void int_isr(void)
 {
 }
 
-#ifdef EXT_INT
 
 void wwdg_isr(void)
 {
@@ -62,8 +61,7 @@ void rcc_isr(void)
 {
 }
 
-void exti0_isr(void);
-#endif
+void user_button_isr(void);
 
 typedef void (*pfnISR)(void);
 __attribute__((section(".stackares")))
@@ -90,7 +88,6 @@ pfnISR VectorTable[]=
   pendsv_isr, // 14
   systick_isr, // 15
 
-#ifdef EXT_INT
   // External Interrupts
   wwdg_isr,                   // Window WatchDog
   pvd_isr,                   // PVD through EXTI Line detection                      
@@ -98,8 +95,7 @@ pfnISR VectorTable[]=
   rtc_wkup_isr,              // RTC Wakeup through the EXTI line                     
   flash_isr,                 // FLASH                                           
   rcc_isr,                   // RCC                                             
-  exti0_isr                  // EXTI Line0 
-#endif
+  user_button_isr            // EXTI Line0 
 };
 
 #endif
