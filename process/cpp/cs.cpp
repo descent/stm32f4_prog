@@ -7,28 +7,52 @@
 #include "syscall.h"
 #include "process.h"
 
-#include <cstdio>
+//#include <cstdio>
+//using namespace std;
 
-using namespace std;
+void proc_a();
+
+//Process user_proc_table[NR_NATIVE_PROCS] =
+Process user_proc_table[MAX_PROC_NUM] =
+{
+  {proc_a, 0},
+//  {proc_b, 0},
+//  {proc_c, 0},
+};
+
+const int NR_NATIVE_PROCS = sizeof(user_proc_table)/sizeof(Process);
+
+#define A_PROC_STACK 0x400
+#define PROC_STACK (A_PROC_STACK*NR_NATIVE_PROCS)
+char proc_stack[PROC_STACK];
+
 
 void proc_a()
 {
   //printf("abc");
-  ur_puts(USART2, "proc a\r\n");
+  //ur_puts(USART2, "proc a\r\n");
   while(1)
   {
-    int t = get_ticks();
+    int i=0;
+
+    if (i==2)
+    {
+      user_proc_table[cur_proc_num].init_proc(user_proc_table[0].stack_pointer);
+    }
+    ++i;
+    //int t = get_ticks();
 
   #if 0
     int j=0;
     ++j;
   #else
+    #if 0
     GPIO_ResetBits(GPIOD, GPIO_Pin_14);
     //GPIO_ResetBits(GPIOD, GPIO_Pin_13);
     GPIO_SetBits(GPIOD, GPIO_Pin_15);
     ur_puts(USART2, "aaa\r\n");
     Delay(0x3FFFFF);
-    /* Insert delay */
+    #endif
   #endif
   }
 }
@@ -68,30 +92,16 @@ void proc_c()
   }
 }
 
-
-
-
-//Process user_proc_table[NR_NATIVE_PROCS] =
-Process user_proc_table[] =
-{
-  {proc_a, 0},
-//  {proc_b, 0},
-//  {proc_c, 0},
-};
-
-const int NR_NATIVE_PROCS = sizeof(user_proc_table)/sizeof(Process);
-
-#define A_PROC_STACK 0x400
-#define PROC_STACK (A_PROC_STACK*NR_NATIVE_PROCS)
-char proc_stack[PROC_STACK];
-
 void init_proc(void)
 {
-  for (int i=0 ; i < NR_NATIVE_PROCS ; ++i)
+  for (int i=0 ; i < cur_proc_num ; ++i)
   {
+    user_proc_table[i].init_proc(proc_stack + A_PROC_STACK*(i+1) - 16*4, user_proc_table[i].exec);
+    #if 0
     user_proc_table[i].stack_pointer = proc_stack + A_PROC_STACK*(i+1) - 16*4;
     *((int*)(user_proc_table[i].stack_pointer + 14*4)) = *((int *)(&(user_proc_table[i].exec))); // setup pc
     *((int*)(user_proc_table[i].stack_pointer + 15*4)) = 0x21000000; // setup psr
+    #endif
   }
 }
 

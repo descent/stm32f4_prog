@@ -25,5 +25,8 @@ dslib/libperi.a:
 	$(CXX) $(MYCFLAGS) $(INC) -c $< 
 cs.o: cs.cpp stm32.h
 
+process.o: process.cpp process.h
+	$(CXX) $(MYCFLAGS) $(INC) -c $< 
+
 clean:
 	rm -rf *.bin *.elf dslib/libperi.a ; find . -name  "*.o" -exec rm -f {} \;
