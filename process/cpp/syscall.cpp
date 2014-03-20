@@ -9,6 +9,11 @@ struct Arg
 
 typedef void (*FuncPtr)(Arg *);
 
+void sys_vfork(Arg *arg)
+{
+
+}
+
 void sys_get_ticks(Arg *arg)
 {
   extern int ticks;
@@ -28,6 +33,14 @@ int get_ticks()
   Arg arg;
 
   service_call(sys_get_ticks, &arg);
+  return arg.ret;
+}
+
+int vfork()
+{
+  Arg arg;
+
+  service_call(sys_vfork, &arg);
   return arg.ret;
 }
 
