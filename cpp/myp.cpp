@@ -11,7 +11,13 @@ int myprintf(const char *fmt, ...)
 {
   va_list ap;
   //int d;
+  char *cur;
 
+  cur = (char *)&fmt;
+  cur += 4;
+  cur += 4;
+
+#if 0
   __builtin_va_start(ap,fmt);
   __builtin_va_arg(ap, char *);
   __builtin_va_arg(ap, int);
@@ -20,7 +26,7 @@ int myprintf(const char *fmt, ...)
   __builtin_va_arg(ap, char *);
   __builtin_va_arg(ap, char *);
   __builtin_va_end(ap);
-
+#endif
   return 0;
 }
 
