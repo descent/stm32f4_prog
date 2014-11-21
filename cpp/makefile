@@ -5,6 +5,9 @@ LD_FLAGS=-Wl,-T./stm32.ld -nostartfiles
 
 all: mycpp.bin
 
+myp.elf: myp.o
+	arm-none-eabi-g++ $(LD_FLAGS) -o $@ $^
+
 %.o:%.S
 	arm-none-eabi-g++ $(MYCFLAGS) $(INC) -c $< 
 
