@@ -1,4 +1,5 @@
 #include "stm32.h"
+#include "stm32f4xx_spi.h"
 #include "stm32f4xx_usart.h"
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
@@ -619,15 +620,292 @@ void SystemInit(void)
 #endif
 }
 
-extern "C"
+u8 TM_SPI_Send(SPI_TypeDef* SPIx, u8 data) {
+        /* Fill output buffer with data */
+        SPIx->DR = data;
+        /* Wait for transmission to complete */
+        while (!SPI_I2S_GetFlagStatus(SPIx, SPI_I2S_FLAG_TXE));
+        /* Wait for received data to complete */
+        while (!SPI_I2S_GetFlagStatus(SPIx, SPI_I2S_FLAG_RXNE));
+        /* Wait for SPI to be ready */
+        while (SPI_I2S_GetFlagStatus(SPIx, SPI_I2S_FLAG_BSY));
+        /* Return data from buffer */
+        return SPIx->DR;
+}
+/* Exchange a byte */
+static u8 xchg_spi (
+        u8 dat        /* Data to send */
+)
 {
+        //FATFS_DEBUG_SEND_USART("xchg_spi: inside");
+        return TM_SPI_Send(SPI1, dat);
+}
+
+
+#define FATFS_USE_DETECT_PIN_PORT                       GPIOA
+#define FATFS_USE_DETECT_PIN_PIN                        GPIO_Pin_6
+
+#define STA_NODISK -1
+
+u8 TM_FATFS_Detect(void) 
+{
+#if FATFS_USE_DETECT_PIN > 0
+        return GPIO_ReadInputDataBit(FATFS_USE_DETECT_PIN_PORT, FATFS_USE_DETECT_PIN_PIN) == Bit_RESET;
+#else
+        return 1;
+#endif
+}
+
+#define FATFS_DEBUG_SEND_USART(str)       ur_puts(USART2, str)
+
+/* MMC/SD command */
+#define CMD0	(0)			/* GO_IDLE_STATE */
+#define CMD1	(1)			/* SEND_OP_COND (MMC) */
+#define	ACMD41	(0x80+41)	/* SEND_OP_COND (SDC) */
+#define CMD8	(8)			/* SEND_IF_COND */
+#define CMD9	(9)			/* SEND_CSD */
+#define CMD10	(10)		/* SEND_CID */
+#define CMD12	(12)		/* STOP_TRANSMISSION */
+#define ACMD13	(0x80+13)	/* SD_STATUS (SDC) */
+#define CMD16	(16)		/* SET_BLOCKLEN */
+#define CMD17	(17)		/* READ_SINGLE_BLOCK */
+#define CMD18	(18)		/* READ_MULTIPLE_BLOCK */
+#define CMD23	(23)		/* SET_BLOCK_COUNT (MMC) */
+#define	ACMD23	(0x80+23)	/* SET_WR_BLK_ERASE_COUNT (SDC) */
+#define CMD24	(24)		/* WRITE_BLOCK */
+#define CMD25	(25)		/* WRITE_MULTIPLE_BLOCK */
+#define CMD32	(32)		/* ERASE_ER_BLK_START */
+#define CMD33	(33)		/* ERASE_ER_BLK_END */
+#define CMD38	(38)		/* ERASE */
+#define CMD55	(55)		/* APP_CMD */
+#define CMD58	(58)		/* READ_OCR */
+
+
+#define FATFS_CS_PORT                                           GPIOA
+#define FATFS_CS_PIN                                            GPIO_Pin_15
+
+#define FATFS_CS_LOW                                            FATFS_CS_PORT->BSRRH = FATFS_CS_PIN
+#define FATFS_CS_HIGH                                           FATFS_CS_PORT->BSRRL = FATFS_CS_PIN
+
+__IO u32 TM_Time2 = 0;
+
+
+#define TM_DELAY_SetTime2(time) (TM_Time2 = (time))
+#define TM_DELAY_Time2() (TM_Time2)
+
+
+static int wait_ready ( /* 1:Ready, 0:Timeout */
+        u32 wt                 /* Timeout [ms] */
+)
+{
+        u8 d;
+
+        TM_DELAY_SetTime2(wt);
+        do {
+                d = xchg_spi(0xFF);
+        } while (d != 0xFF && TM_DELAY_Time2());        /* Wait for card goes ready or timeout */
+        if (d == 0xFF) {
+                FATFS_DEBUG_SEND_USART("wait_ready: OK");
+        } else {
+                FATFS_DEBUG_SEND_USART("wait_ready: timeout");
+        }
+        return (d == 0xFF) ? 1 : 0;
+}
+
+/*-----------------------------------------------------------------------*/
+/* Deselect card and release SPI                                         */
+/*-----------------------------------------------------------------------*/
+
+static void deselect (void)
+{
+        FATFS_CS_HIGH;                  /* CS = H */
+        xchg_spi(0xFF);                 /* Dummy clock (force DO hi-z for multiple slave SPI) */
+        FATFS_DEBUG_SEND_USART("deselect: ok");
+}
+
+
+/*-----------------------------------------------------------------------*/
+/* Select card and wait for ready                                        */
+/*-----------------------------------------------------------------------*/
+
+static int select (void)        /* 1:OK, 0:Timeout */
+{
+        FATFS_CS_LOW;
+        xchg_spi(0xFF); /* Dummy clock (force DO enabled) */
+
+        if (wait_ready(500)) {
+                FATFS_DEBUG_SEND_USART("select: OK");
+                return 1;       /* OK */
+        }
+        FATFS_DEBUG_SEND_USART("select: no");
+        deselect();
+        return 0;       /* Timeout */
+}
+
+/*-----------------------------------------------------------------------*/
+/* Send a command packet to the MMC                                      */
+/*-----------------------------------------------------------------------*/
+
+static u8 send_cmd (		/* Return value: R1 resp (bit7==1:Failed to send) */
+	u8 cmd,		/* Command index */
+	u32 arg		/* Argument */
+)
+{
+	u8 n, res;
+
+	FATFS_DEBUG_SEND_USART("send_cmd: inside");
+	
+	if (cmd & 0x80) {	/* Send a CMD55 prior to ACMD<n> */
+		FATFS_DEBUG_SEND_USART("send_cmd: 0x80 bit set");
+		cmd &= 0x7F;
+		res = send_cmd(CMD55, 0);
+		if (res > 1) return res;
+	}
+
+	/* Select the card and wait for ready except to stop multiple block read */
+	if (cmd != CMD12) {
+		FATFS_DEBUG_SEND_USART("send_cmd: cmd != CMD12");
+		deselect();
+		if (!select()) return 0xFF;
+	}
+
+	/* Send command packet */
+	xchg_spi(0x40 | cmd);				/* Start + command index */
+	xchg_spi((u8)(arg >> 24));		/* Argument[31..24] */
+	xchg_spi((u8)(arg >> 16));		/* Argument[23..16] */
+	xchg_spi((u8)(arg >> 8));			/* Argument[15..8] */
+	xchg_spi((u8)arg);				/* Argument[7..0] */
+	n = 0x01;							/* Dummy CRC + Stop */
+	if (cmd == CMD0) n = 0x95;			/* Valid CRC for CMD0(0) */
+	if (cmd == CMD8) n = 0x87;			/* Valid CRC for CMD8(0x1AA) */
+	xchg_spi(n);
+
+	/* Receive command resp */
+	if (cmd == CMD12) {
+		FATFS_DEBUG_SEND_USART("send_cmd: CMD12, receive command resp");
+		xchg_spi(0xFF);					/* Diacard following one byte when CMD12 */
+	}
+	n = 10;								/* Wait for response (10 bytes max) */
+	do
+		res = xchg_spi(0xFF);
+	while ((res & 0x80) && --n);
+
+	return res;							/* Return received response */
+}
 
 int main()
 {
-  float f=1.5;
 #ifdef SET_CPU_CLOCK
   SystemInit();
 #endif
+
+
+        //Initialize CS pin
+        // PA15
+
+  // ref: fatfs_sd.c: TM_FATFS_InitPins()
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+        RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);   
+
+        GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
+        GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
+        GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+        GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
+        GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
+
+        GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+#if 0
+#if FATFS_USE_DETECT_PIN > 0
+        RCC_AHB1PeriphClockCmd(FATFS_USE_DETECT_PIN_RCC, ENABLE);
+        
+        GPIO_InitStruct.GPIO_Pin = FATFS_USE_DETECT_PIN_PIN;
+        GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+        GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+        GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+        GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
+        
+        GPIO_Init(FATFS_USE_DETECT_PIN_PORT, &GPIO_InitStruct);
+#endif
+
+#if FATFS_USE_WRITEPROTECT_PIN > 0
+        RCC_AHB1PeriphClockCmd(FATFS_USE_WRITEPROTECT_PIN_RCC, ENABLE);
+       
+        GPIO_InitStruct.GPIO_Pin = FATFS_USE_WRITEPROTECT_PIN_PIN;
+        GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+        GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+        GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+        GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
+
+        GPIO_Init(FATFS_USE_WRITEPROTECT_PIN_PORT, &GPIO_InitStruct);
+#endif
+#endif
+
+
+  SPI_InitTypeDef SPI_InitStruct;
+
+  //Common settings for all pins
+  GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+
+  //Enable clock for GPIOB
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+  //Pinspack nr. 2        SCK          MISO         MOSI
+  GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+  GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_SPI1);
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_SPI1);
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI1);
+
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
+
+  SPI_StructInit(&SPI_InitStruct);
+  SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_32;
+  SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b;
+  SPI_InitStruct.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+  SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
+  SPI_InitStruct.SPI_Mode = SPI_Mode_Master;
+
+
+                SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
+                SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
+
+#if 0
+                SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
+                SPI_InitStruct.SPI_CPHA = SPI_CPHA_2Edge;
+
+                SPI_InitStruct.SPI_CPOL = SPI_CPOL_High;
+                SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
+
+                SPI_InitStruct.SPI_CPOL = SPI_CPOL_High;
+                SPI_InitStruct.SPI_CPHA = SPI_CPHA_2Edge;
+#endif
+        
+  SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
+  SPI_Init(SPI1, &SPI_InitStruct);
+  SPI_Cmd(SPI1, ENABLE);
+
+
+  if (!TM_FATFS_Detect()) 
+  {
+    //fio_printf(1, "STA_NODISK %X\r\n", STA_NODISK);
+    return STA_NODISK;
+  }
+
+  for (int n = 10; n; n--) 
+    xchg_spi(0xFF);
+
+  if (send_cmd(CMD0, 0) == 1) /* Put the card SPI/Idle state */
+  {
+  }
+
+#if 0
+
+
 
   init_usart(115200);
   ur_puts(USART2, "Init complete! Hello World!\r\n");
@@ -673,7 +951,7 @@ int main()
       USART_SendData(USART2, ch);
     //send_string("ur output\n");
   }
-}
+#endif
 }
 
 void int_isr(void)
