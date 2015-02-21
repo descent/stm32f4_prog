@@ -4,7 +4,7 @@
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
 
-#define SET_CPU_CLOCK
+//#define SET_CPU_CLOCK
 
 #define VECT_TAB_OFFSET  0x0 /*!< Vector Table base offset field.  This value must be a multiple of 0x200. */
 
@@ -656,7 +656,8 @@ u8 TM_FATFS_Detect(void)
 #endif
 }
 
-#define FATFS_DEBUG_SEND_USART(str)       ur_puts(USART2, str)
+//#define FATFS_DEBUG_SEND_USART(str)       ur_puts(USART2, str)
+#define FATFS_DEBUG_SEND_USART(str)       
 
 /* MMC/SD command */
 #define CMD0	(0)			/* GO_IDLE_STATE */
@@ -699,11 +700,12 @@ static int wait_ready ( /* 1:Ready, 0:Timeout */
 )
 {
         u8 d;
+        int t=500;
 
         TM_DELAY_SetTime2(wt);
         do {
                 d = xchg_spi(0xFF);
-        } while (d != 0xFF && TM_DELAY_Time2());        /* Wait for card goes ready or timeout */
+        } while (d != 0xFF && --t);        /* Wait for card goes ready or timeout */
         if (d == 0xFF) {
                 FATFS_DEBUG_SEND_USART("wait_ready: OK");
         } else {
@@ -917,6 +919,99 @@ void SPI_StructInit(SPI_InitTypeDef* SPI_InitStruct)
   SPI_InitStruct->SPI_CRCPolynomial = 7;
 }
 
+#define CR_BYTE3_ADDRESS          ((uint32_t)0x40023802)
+
+#define RCC_HSE_OFF                      ((uint8_t)0x00)
+#define RCC_HSE_ON                       ((uint8_t)0x01)
+#define RCC_HSE_Bypass                   ((uint8_t)0x05)
+#define IS_RCC_HSE(HSE) (((HSE) == RCC_HSE_OFF) || ((HSE) == RCC_HSE_ON) || \
+                         ((HSE) == RCC_HSE_Bypass))
+
+
+void RCC_HSEConfig(uint8_t RCC_HSE)
+{
+  /* Check the parameters */
+  assert_param(IS_RCC_HSE(RCC_HSE));
+
+  /* Reset HSEON and HSEBYP bits before configuring the HSE ------------------*/
+  *(__IO uint8_t *) CR_BYTE3_ADDRESS = RCC_HSE_OFF;
+
+  /* Set the new HSE configuration -------------------------------------------*/
+  *(__IO uint8_t *) CR_BYTE3_ADDRESS = RCC_HSE;
+}
+
+#define FLAG_MASK                 ((uint8_t)0x1F)
+
+FlagStatus RCC_GetFlagStatus(uint8_t RCC_FLAG)
+{
+  uint32_t tmp = 0;
+  uint32_t statusreg = 0;
+  FlagStatus bitstatus = RESET;
+
+  /* Check the parameters */
+  assert_param(IS_RCC_FLAG(RCC_FLAG));
+
+  /* Get the RCC register index */
+  tmp = RCC_FLAG >> 5;
+  if (tmp == 1)               /* The flag to check is in CR register */
+  {
+    statusreg = RCC->CR;
+  }
+  else if (tmp == 2)          /* The flag to check is in BDCR register */
+  {
+    statusreg = RCC->BDCR;
+  }
+  else                       /* The flag to check is in CSR register */
+  {
+    statusreg = RCC->CSR;
+  }
+
+  /* Get the flag position */
+  tmp = RCC_FLAG & FLAG_MASK;
+  if ((statusreg & ((uint32_t)1 << tmp)) != (uint32_t)RESET)
+  {
+    bitstatus = SET;
+  }
+  else
+  {
+    bitstatus = RESET;
+  }
+  /* Return the flag status */
+  return bitstatus;
+}
+
+
+ErrorStatus RCC_WaitForHSEStartUp(void)
+{
+  __IO uint32_t startupcounter = 0;
+  ErrorStatus status = ERROR;
+  FlagStatus hsestatus = RESET;
+  /* Wait till HSE is ready and if Time out is reached exit */
+  do
+  {
+    hsestatus = RCC_GetFlagStatus(RCC_FLAG_HSERDY);
+    startupcounter++;
+  } while((startupcounter != HSE_STARTUP_TIMEOUT) && (hsestatus == RESET));
+
+  if (RCC_GetFlagStatus(RCC_FLAG_HSERDY) != RESET)
+  {
+    status = SUCCESS;
+  }
+  else
+  {
+    status = ERROR;
+  }
+  return (status);
+}
+
+
+typedef enum {
+        TM_SPI_Mode_0,  //Clock polarity low, clock phase 1st edge
+        TM_SPI_Mode_1,  //Clock polarity low, clock phase 2nd edge
+        TM_SPI_Mode_2,  //Clock polarity high, clock phase 1st edge
+        TM_SPI_Mode_3   //Clock polarity high, clock phase 2nd edge
+} TM_SPI_Mode_t;
+
 int main()
 {
 #ifdef SET_CPU_CLOCK
@@ -966,8 +1061,32 @@ int main()
 #endif
 #endif
 
+volatile uint32_t mult;
+ uint32_t SystemCoreClock = 168000000;
 
-  SPI_InitTypeDef SPI_InitStruct;
+  /* Enable External HSE clock */
+  RCC_HSEConfig(RCC_HSE_ON);
+
+  /* Wait for stable clock */
+  while (!RCC_WaitForHSEStartUp());
+
+
+        /* Set Systick interrupt every 1ms */
+        if (SysTick_Config(SystemCoreClock / 1000)) {
+                /* Capture error */
+                while (1);
+        }
+
+        #ifdef __GNUC__
+                /* Set multiplier for delay under 1us with pooling mode = not so accurate */
+                mult = SystemCoreClock / 7000000;
+        #else
+                /* Set multiplier for delay under 1us with pooling mode = not so accurate */
+                mult = SystemCoreClock / 3000000;
+        #endif
+
+
+
 
   //Common settings for all pins
   GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
@@ -977,8 +1096,10 @@ int main()
 
   //Enable clock for GPIOB
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+
   //Pinspack nr. 2        SCK          MISO         MOSI
   GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+
   GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_SPI1);
@@ -987,7 +1108,10 @@ int main()
 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 
+  SPI_InitTypeDef SPI_InitStruct;
+
   SPI_StructInit(&SPI_InitStruct);
+
   SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_32;
   SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b;
   SPI_InitStruct.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
@@ -1008,10 +1132,13 @@ int main()
                 SPI_InitStruct.SPI_CPOL = SPI_CPOL_High;
                 SPI_InitStruct.SPI_CPHA = SPI_CPHA_2Edge;
 #endif
+
         
   SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
   SPI_Init(SPI1, &SPI_InitStruct);
   SPI_Cmd(SPI1, ENABLE);
+
+  GPIOA->BSRRL = GPIO_Pin_15;
 
 
   if (!TM_FATFS_Detect()) 
@@ -1023,8 +1150,15 @@ int main()
   for (int n = 10; n; n--) 
     xchg_spi(0xFF);
 
+  int i=1;
+
   if (send_cmd(CMD0, 0) == 1) /* Put the card SPI/Idle state */
   {
+    i = 5;
+  }
+  else
+  {
+    i = 15;
   }
 
 #if 0
