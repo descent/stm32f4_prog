@@ -32,7 +32,7 @@ public:
               T* t = (T*) malloc(n * sizeof(T));
               std::cout
               << "  used my_allocator to allocate   at address "
-              << t << " (+)" << std::endl;
+              << t << "n: " << n << " (+)" << std::endl;
               return t;
             }
   
@@ -84,12 +84,12 @@ int main()
   vector<int, my_allocator<int> > custom_vec;
 
 
-  for (int i = 0; i < 5; ++i) 
+  for (int i = 0; i < numItems; ++i) 
   {
     custom_vec.push_back(i);
   }
 
-  for (int i=0 ; i < 5 ; ++i)
+  for (int i=0 ; i < numItems ; ++i)
     cout << custom_vec[i] << endl;
   
   return 0;
