@@ -11,7 +11,7 @@ MEMORY
 MEMORY
 {
   FLASH (rx)      : ORIGIN = 0x00000000, LENGTH = 1024K
-  SRAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 192K
+  SRAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 128K
   MEMORY_B1 (rx)  : ORIGIN = 0x60000000, LENGTH = 0K
 }
 
@@ -26,15 +26,23 @@ SECTIONS
     _etext = .;
   } > FLASH
 
-  /* .ARM.exidx is sorted, so has to go in its own output section.  
+ 
+
+        /* 
+         .ARM.exidx (NOLOAD) :
+         */
         __exidx_start = .;
-        .ARM.exidx :
+        arm (NOLOAD) :
         {
-                *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-        } >FLASH
+                *(.ARM* .gnu.linkonce.armexidx.* .eh_frame)
+        } > SRAM
         __exidx_end = .;
-     if no -fno-exceptions -fno-rtti, g++ will procude the sections
-  */
+   s1 (NOLOAD) : 
+   {
+    s1_begin = .;
+    *(s1)
+    s1_end = .;
+   } > SRAM
 
   .data : AT (_etext)
   {
