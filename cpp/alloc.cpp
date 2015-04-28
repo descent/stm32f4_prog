@@ -34,7 +34,8 @@ public:
               if (t==0)
               {
                 std::cout << "cannot alloc memory\n";
-                exit(-1);
+                throw std::bad_alloc();
+                //exit(-1);
               }
               std::cout
               << "  used my_allocator to allocate   at address "
