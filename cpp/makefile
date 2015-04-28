@@ -20,9 +20,11 @@ new_section.o: new_section.cpp
 
 mycpp.o: mycpp.cpp stm32.h
 
-mycpp.elf: mycpp.o new_section.o
+mycpp.elf: mycpp.o new_section.o mem.o
 	arm-none-eabi-g++ $(LD_FLAGS) -o $@ $^
 
+alloc: alloc.cpp
+	g++ -o $@ $<
 %.bin:%.elf
 	arm-none-eabi-objcopy -O binary $< $@
 
