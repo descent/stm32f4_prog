@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 
+#include "mem.h"
 
 using namespace std;
 
@@ -29,16 +30,21 @@ public:
 
 
   pointer   allocate(size_type n, const void * = 0) {
-              T* t = (T*) malloc(n * sizeof(T));
+              T* t = (T*) mymalloc(n * sizeof(T));
+              if (t==0)
+              {
+                std::cout << "cannot alloc memory\n";
+                exit(-1);
+              }
               std::cout
               << "  used my_allocator to allocate   at address "
-              << t << "n: " << n << " (+)" << std::endl;
+              << t << "n: " << n << " size: " << n * sizeof(T) << " (+)" << std::endl;
               return t;
             }
   
   void      deallocate(void* p, size_type) {
               if (p) {
-                free(p);
+                myfree(p);
                 std::cout
                 << "  used my_allocator to deallocate at address "
                 << p << " (-)" << 
@@ -67,7 +73,7 @@ public:
 
 int main()
 {
-  const int numItems = 100;
+  const int numItems = 9;
   std::cout << "\nCreating a RWTValDlist with a default allocator"
             << std::endl;
 
