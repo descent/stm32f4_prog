@@ -38,8 +38,8 @@ public:
                 //exit(-1);
               }
               std::cout
-              << "  used my_allocator to allocate   at address "
-              << t << "n: " << n << " size: " << n * sizeof(T) << " (+)" << std::endl;
+              << "  used my_allocator to allocate at address "
+              << t << " n: " << n << " total size: " << n * sizeof(T) << " (+)" << std::endl;
               return t;
             }
   
@@ -74,7 +74,7 @@ public:
 
 int main()
 {
-  const int numItems = 9;
+  const int numItems = 100;
   std::cout << "\nCreating a RWTValDlist with a default allocator"
             << std::endl;
 
@@ -93,11 +93,15 @@ int main()
 
   for (int i = 0; i < numItems; ++i) 
   {
-    custom_vec.push_back(i);
+    custom_vec.push_back(i*10);
   }
+
+  int z=1+2;
 
   for (int i=0 ; i < numItems ; ++i)
     cout << custom_vec[i] << endl;
+
+  int x=1+2;
   
   return 0;
 }
