@@ -5,6 +5,7 @@
 //#include <rw/cstring.h>
 #include <iostream>
 #include <vector>
+#include <list>
 
 #include <cstdlib>
 
@@ -39,7 +40,7 @@ public:
               }
               std::cout
               << "  used my_allocator to allocate at address "
-              << t << " n: " << n << " total size: " << n * sizeof(T) << " (+)" << std::endl;
+              << t << " n: " << n << " sizeof(T): " << sizeof(T) << " total size: " << n * sizeof(T) << " (+)" << std::endl;
               return t;
             }
   
@@ -78,6 +79,9 @@ int main()
   std::cout << "\nCreating a RWTValDlist with a default allocator"
             << std::endl;
 
+//#define TEST_VEC
+#define TEST_LIST
+#ifdef TEST_VEC
   vector<int> vec;
 
   for (int i = 0; i < 5; ++i) 
@@ -101,7 +105,19 @@ int main()
   for (int i=0 ; i < numItems ; ++i)
     cout << custom_vec[i] << endl;
 
+#endif
+
+#ifdef TEST_LIST
+  list<int, my_allocator<int> > custom_list;
+  for (int i = 0; i < 65; ++i) 
+  {
+    custom_list.push_back(i*10);
+  }
+
+  for (std::list<int>::iterator it = custom_list.begin() ; it != custom_list.end() ; ++it)
+    cout << *it << endl;
+
+#endif 
   int x=1+2;
-  
   return 0;
 }
