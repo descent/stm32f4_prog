@@ -114,7 +114,8 @@ int main()
     custom_list.push_back(i*10);
   }
 
-  for (std::list<int>::iterator it = custom_list.begin() ; it != custom_list.end() ; ++it)
+  //for (std::list<int>::iterator it = custom_list.begin() ; it != custom_list.end() ; ++it)
+  for (auto it = custom_list.begin() ; it != custom_list.end() ; ++it)
     cout << *it << endl;
 
 #endif 
