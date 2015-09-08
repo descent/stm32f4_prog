@@ -35,7 +35,7 @@ SECTIONS
         arm (NOLOAD) :
         {
                 *(.ARM* .gnu.linkonce.armexidx.* .eh_frame)
-        } > SRAM
+        } > FLASH
         __exidx_end = .;
    s1 (NOLOAD) : 
    {
