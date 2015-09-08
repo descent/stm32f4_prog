@@ -47,7 +47,7 @@ void int_isr(void)
 
 typedef void (*pfnISR)(void);
 __attribute__((section(".stackares")))
-static unsigned long pulStack[STACK_SIZE];
+static unsigned char pulStack[STACK_SIZE];
 
 __attribute__((section(".isr_vector")))
 pfnISR VectorTable[]=
