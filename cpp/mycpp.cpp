@@ -1,8 +1,19 @@
 #include "stm32.h"
-
+#include "my_setjmp.h"
 #include "mem.h"
-
 #include <vector>
+
+#define setjmp my_setjmp
+#define longjmp my_longjmp
+
+#define TRY do { switch((ex_code = setjmp(ex_buf__))) { case 0:
+#define CATCH(x) break; case x : 
+#define ETRY break; } } while(0);
+#define THROW(x) longjmp(ex_buf__, x)
+
+#define NOFREE_MEM 5
+
+jmp_buf ex_buf__;
 
 int print(int i)
 {
@@ -109,6 +120,14 @@ public:
 
   pointer   allocate(size_type n, const void * = 0) {
               T* t = (T*) mymalloc(n * sizeof(T));
+
+              if (t==0)
+              {
+                print("\r\nno free mem\r\n");
+                THROW(NOFREE_MEM);
+                //exit(-1);
+              }
+
               print("used my_allocator to allocate   at address ");
               print((int)t);
               print("\r\n");
@@ -146,11 +165,21 @@ public:
 
 void mymain(void)
 {
-  std::vector<char, my_allocator<char> > vec;
-  for (int i=0 ; i < 5 ; ++i)
+  int ex_code = 0;
+
+  TRY
   {
-    vec.push_back(i);
+    std::vector<char, my_allocator<char> > vec;
+    for (int i=0 ; i < 5 ; ++i)
+    {
+      vec.push_back(i);
+    }
   }
+  CATCH(NOFREE_MEM)
+  {
+    print("\r\ngot no free mem\r\n");
+  }
+  ETRY
 #if 0
   char a, b, c , d, e, f;
   //std::vector<int, __gnu_cxx::new_allocator<int> > vec;
@@ -165,7 +194,7 @@ void mymain(void)
 
   char z=a+b+c+d;
 
-  while(1);
 #endif 
+  while(1);
 }
 
