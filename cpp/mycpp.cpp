@@ -26,7 +26,7 @@ extern "C" void _exit()
 {
 }
 
-char brk_area[10240];
+char brk_area[1024];
 
 extern "C" char *_sbrk(char *increment)
 {
@@ -58,6 +58,11 @@ int open(const char *pathname, int flags, int mode)
 }
 
 extern "C"
+int _open(const char *pathname, int flags, int mode)
+{
+}
+
+extern "C"
 int _isatty(int fd)
 {
 }
@@ -83,7 +88,7 @@ int _lseek(int fd, int offset, int whence)
 {
 }
 
-static char memarea[10240];
+static char memarea[1024];
 
 template <class T>
 class my_allocator
@@ -141,16 +146,17 @@ public:
 
 void mymain(void)
 {
-#if 1
+  std::vector<char, my_allocator<char> > vec;
+  for (int i=0 ; i < 5 ; ++i)
+  {
+    vec.push_back(i);
+  }
+#if 0
   char a, b, c , d, e, f;
   //std::vector<int, __gnu_cxx::new_allocator<int> > vec;
   std::vector<char, my_allocator<char> > vec;
   print(35);
   print('A');
-  for (int i=0 ; i < 5 ; ++i)
-  {
-    vec.push_back(i);
-  }
   a = vec[0];
   b = vec[1];
   c = vec[2];
