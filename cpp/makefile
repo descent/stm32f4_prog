@@ -20,7 +20,7 @@ new_section.o: new_section.cpp
 
 mycpp.o: mycpp.cpp stm32.h
 
-mycpp.elf: mycpp.o new_section.o mem.o
+mycpp.elf: mycpp.o new_section.o mem.o my_setjmp.o
 	arm-none-eabi-g++ $(LD_FLAGS) -o $@ $^
 
 alloc: alloc.cpp
