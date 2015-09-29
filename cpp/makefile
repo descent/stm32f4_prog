@@ -8,6 +8,11 @@ all: mycpp.bin
 myp.elf: myp.o
 	arm-none-eabi-g++ $(LD_FLAGS) -Wl,-Map,$@.map -o $@ $^
 
+mycpp11.elf: mycpp11.o
+	arm-none-eabi-g++ $(LD_FLAGS) -Wl,-Map,$@.map -o $@ $^
+mycpp11.o: mycpp11.cpp stm32.h
+	arm-none-eabi-g++ -std=c++11 $(MYCFLAGS) $(INC) -c $< 
+
 %.o:%.S
 	arm-none-eabi-g++ $(MYCFLAGS) $(INC) -c $< 
 
