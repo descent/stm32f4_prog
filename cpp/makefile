@@ -8,6 +8,11 @@ all: mycpp.bin
 myp.elf: myp.o
 	arm-none-eabi-g++ $(LD_FLAGS) -Wl,-Map,$@.map -o $@ $^
 
+mycpp11.elf: mycpp11.o
+	arm-none-eabi-g++ $(LD_FLAGS) -Wl,-Map,$@.map -o $@ $^
+mycpp11.o: mycpp11.cpp stm32.h
+	arm-none-eabi-g++ -std=c++11 $(MYCFLAGS) $(INC) -c $< 
+
 %.o:%.S
 	arm-none-eabi-g++ $(MYCFLAGS) $(INC) -c $< 
 
@@ -20,7 +25,7 @@ new_section.o: new_section.cpp
 
 mycpp.o: mycpp.cpp stm32.h
 
-mycpp.elf: mycpp.o new_section.o mem.o
+mycpp.elf: mycpp.o new_section.o mem.o my_setjmp.o
 	arm-none-eabi-g++ $(LD_FLAGS) -o $@ $^
 
 alloc: alloc.cpp

@@ -1,3 +1,5 @@
+// extern int __exidx_end, __exidx_start;
+
 __attribute__((section("s1")))
 int new_s1(int i)
 {

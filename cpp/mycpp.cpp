@@ -1,8 +1,19 @@
 #include "stm32.h"
-
+#include "my_setjmp.h"
 #include "mem.h"
-
 #include <vector>
+
+#define setjmp my_setjmp
+#define longjmp my_longjmp
+
+#define TRY do { switch((ex_code = setjmp(ex_buf__))) { case 0:
+#define CATCH(x) break; case x : 
+#define ETRY break; } } while(0);
+#define THROW(x) longjmp(ex_buf__, x)
+
+#define NOFREE_MEM 5
+
+jmp_buf ex_buf__;
 
 int print(int i)
 {
@@ -26,7 +37,7 @@ extern "C" void _exit()
 {
 }
 
-char brk_area[10240];
+char brk_area[1024];
 
 extern "C" char *_sbrk(char *increment)
 {
@@ -58,6 +69,11 @@ int open(const char *pathname, int flags, int mode)
 }
 
 extern "C"
+int _open(const char *pathname, int flags, int mode)
+{
+}
+
+extern "C"
 int _isatty(int fd)
 {
 }
@@ -83,7 +99,7 @@ int _lseek(int fd, int offset, int whence)
 {
 }
 
-static char memarea[10240];
+static char memarea[1024];
 
 template <class T>
 class my_allocator
@@ -104,6 +120,14 @@ public:
 
   pointer   allocate(size_type n, const void * = 0) {
               T* t = (T*) mymalloc(n * sizeof(T));
+
+              if (t==0)
+              {
+                print("\r\nno free mem\r\n");
+                THROW(NOFREE_MEM);
+                //exit(-1);
+              }
+
               print("used my_allocator to allocate   at address ");
               print((int)t);
               print("\r\n");
@@ -141,16 +165,27 @@ public:
 
 void mymain(void)
 {
-#if 1
+  int ex_code = 0;
+
+  TRY
+  {
+    std::vector<char, my_allocator<char> > vec;
+    for (int i=0 ; i < 5 ; ++i)
+    {
+      vec.push_back(i);
+    }
+  }
+  CATCH(NOFREE_MEM)
+  {
+    print("\r\ngot no free mem\r\n");
+  }
+  ETRY
+#if 0
   char a, b, c , d, e, f;
   //std::vector<int, __gnu_cxx::new_allocator<int> > vec;
   std::vector<char, my_allocator<char> > vec;
   print(35);
   print('A');
-  for (int i=0 ; i < 5 ; ++i)
-  {
-    vec.push_back(i);
-  }
   a = vec[0];
   b = vec[1];
   c = vec[2];
@@ -159,7 +194,7 @@ void mymain(void)
 
   char z=a+b+c+d;
 
-  while(1);
 #endif 
+  while(1);
 }
 
