@@ -700,7 +700,7 @@ static int wait_ready ( /* 1:Ready, 0:Timeout */
 )
 {
         u8 d;
-        int t=500;
+        int t=wt;
 
         TM_DELAY_SetTime2(wt);
         do {
@@ -735,7 +735,7 @@ static int select (void)        /* 1:OK, 0:Timeout */
         FATFS_CS_LOW;
         xchg_spi(0xFF); /* Dummy clock (force DO enabled) */
 
-        if (wait_ready(500)) {
+        if (wait_ready(500000)) {
                 FATFS_DEBUG_SEND_USART("select: OK");
                 return 1;       /* OK */
         }
@@ -1012,11 +1012,69 @@ typedef enum {
         TM_SPI_Mode_3   //Clock polarity high, clock phase 2nd edge
 } TM_SPI_Mode_t;
 
+uint16_t SPI_I2S_ReceiveData(SPI_TypeDef* SPIx)
+{
+  /* Check the parameters */
+  assert_param(IS_SPI_ALL_PERIPH_EXT(SPIx));
+
+  /* Return the data in the DR register */
+  return SPIx->DR;
+}
+
+
+uint8_t SPI1_send(uint8_t data)
+{
+  SPI1->DR = data; // write data to be transmitted to the SPI data register
+  while( !(SPI1->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
+  while( !(SPI1->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
+  while( SPI1->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
+  return SPI1->DR; // return received data from SPI data register
+}
+
+// ref: https://github.com/descent/08_spi/blob/master/main.c
+uint8_t SPI2_send(uint8_t data)
+{
+  SPI2->DR = data; // write data to be transmitted to the SPI data register
+  while( !(SPI2->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
+  while( !(SPI2->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
+  while( SPI2->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
+  return SPI2->DR; // return received data from SPI data register
+}
+
+void SPI_I2S_SendData(SPI_TypeDef* SPIx, uint16_t Data)
+{
+  /* Check the parameters */
+  assert_param(IS_SPI_ALL_PERIPH_EXT(SPIx));
+  
+  /* Write in the DR register the data to be sent */
+  SPIx->DR = Data;
+}
+
+void MySPI_SendData(char da)
+{
+  while(SPI_I2S_GetFlagStatus(SPI2,SPI_I2S_FLAG_TXE)==RESET);
+  SPI_SendData(SPI2,da);
+}
+
+uint8_t MySPI_ReceiveData(void)
+{
+  while(SPI_I2S_GetFlagStatus(SPI2,SPI_I2S_FLAG_RXNE)==RESET);
+  return SPI_ReceiveData(SPI2);
+}
+
 int main()
 {
 #ifdef SET_CPU_CLOCK
   SystemInit();
 #endif
+
+  init_usart(115200);
+  ur_puts(USART2, "xxx Init complete! Hello World!\r\n");
+
+  for (int i=0 ; i < 10 ; ++i)
+  {
+    ur_puts(USART2, "ur test\r\n");
+  }
 
 
         //Initialize CS pin
@@ -1061,37 +1119,11 @@ int main()
 #endif
 #endif
 
-volatile uint32_t mult;
- uint32_t SystemCoreClock = 168000000;
-
-  /* Enable External HSE clock */
-  RCC_HSEConfig(RCC_HSE_ON);
-
-  /* Wait for stable clock */
-  while (!RCC_WaitForHSEStartUp());
-
-
-        /* Set Systick interrupt every 1ms */
-        if (SysTick_Config(SystemCoreClock / 1000)) {
-                /* Capture error */
-                while (1);
-        }
-
-        #ifdef __GNUC__
-                /* Set multiplier for delay under 1us with pooling mode = not so accurate */
-                mult = SystemCoreClock / 7000000;
-        #else
-                /* Set multiplier for delay under 1us with pooling mode = not so accurate */
-                mult = SystemCoreClock / 3000000;
-        #endif
-
-
-
 
   //Common settings for all pins
   GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
 
   //Enable clock for GPIOB
@@ -1118,9 +1150,48 @@ volatile uint32_t mult;
   SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
   SPI_InitStruct.SPI_Mode = SPI_Mode_Master;
 
+  SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
+  SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
 
-                SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
-                SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
+  SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
+  SPI_Init(SPI1, &SPI_InitStruct);
+  SPI_Cmd(SPI1, ENABLE);
+
+  // init spi2
+  GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+
+  GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_SPI2);
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_SPI2);
+  GPIO_PinAFConfig(GPIOB, GPIO_PinSource15, GPIO_AF_SPI2);
+
+
+  //RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI2, ENABLE);
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
+
+  SPI_StructInit(&SPI_InitStruct);
+
+  SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_32;
+  SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b;
+  SPI_InitStruct.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+  SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
+  SPI_InitStruct.SPI_Mode = SPI_Mode_Slave;
+
+  SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
+  SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
+
+  SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
+  SPI_Init(SPI2, &SPI_InitStruct);
+  SPI_Cmd(SPI2, ENABLE);
+
+  uint16_t data;
+  while(1)
+  {
+    SPI1_send('A');
+    data = SPI_I2S_ReceiveData(SPI2);
+    ur_puts(USART2, "spi w/r\r\n");
+  }
 
 #if 0
                 SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
@@ -1134,9 +1205,7 @@ volatile uint32_t mult;
 #endif
 
         
-  SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
-  SPI_Init(SPI1, &SPI_InitStruct);
-  SPI_Cmd(SPI1, ENABLE);
+#if 0
 
   GPIOA->BSRRL = GPIO_Pin_15;
 
@@ -1165,8 +1234,6 @@ volatile uint32_t mult;
 
 
 
-  init_usart(115200);
-  ur_puts(USART2, "Init complete! Hello World!\r\n");
 
   RCC_ClocksTypeDef RCC_ClocksStatus;
   RCC_GetClocksFreq(&RCC_ClocksStatus);
@@ -1209,6 +1276,8 @@ volatile uint32_t mult;
       USART_SendData(USART2, ch);
     //send_string("ur output\n");
   }
+#endif
+
 #endif
 }
 
