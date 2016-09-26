@@ -19,8 +19,12 @@ all: mygpio_led.bin
 
 mygpio_led.bin: mygpio_led.elf
 	arm-none-eabi-objcopy -Obinary $< $@
-mygpio_led.elf: mygpio_led.o
+mygpio_led.elf: mygpio_led.test.o
 	arm-none-eabi-gcc $(LD_FLAGS) $(INC) -o $@ $< 
+
+mygpio_led.test.o: mygpio_led.c stm32.h 
+	arm-none-eabi-gcc -DTEST $(MYCFLAGS) $(INC) -o $@ -c $< 
+
 mygpio_led.o: mygpio_led.c stm32.h 
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -c $< 
 clean:
