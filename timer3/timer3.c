@@ -673,15 +673,20 @@ int main(void)
   // set to 168M
   SystemInit();
 
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
   TIM_TimeBaseInitTypeDef time_init_struct;
 
-  time_init_struct.TIM_Period = 100;
-  time_init_struct.TIM_Prescaler = 1;
+  time_init_struct.TIM_Period = 84000;
+  time_init_struct.TIM_Prescaler = 0;
 
   time_init_struct.TIM_CounterMode = TIM_CounterMode_Up;
-  time_init_struct.TIM_ClockDivision = TIM_CKD_DIV1;
+  time_init_struct.TIM_ClockDivision = TIM_CKD_DIV1; // TIM_CKD_DIV1: 0x0
+
+  TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 
   TIM_TimeBaseInit(TIM3, &time_init_struct);
+  TIM_Cmd(TIM3, ENABLE);
+
 
 #if 0
   init_usart(115200);
@@ -713,21 +718,6 @@ int main(void)
   ur_puts(USART2, "\r\n");
 #endif
 
-  // systick 21M
-  // 1/21000000 會減 1
-  // int systick
-
-  //SysTick->CTRL &= ~(1<<2);
-
-#if 1
-  //SysTick->LOAD = 21-1; // 1ms
-  SysTick->LOAD = INTERVAL;
-  SysTick->VAL = INTERVAL;
-  // SysTick->CTRL |= (1<<1); // enable interrupt
-  //SysTick->CTRL |= 1; // enable systick
-  //SysTick->CTRL = 0;
-  //SysTick->VAL = 0;
-#endif
   GPIO_InitTypeDef GPIO_InitStructure;
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
@@ -742,23 +732,17 @@ int main(void)
   while(1)
   {
 
-    GPIO_SetBits(GPIOD, GPIO_Pin_12); // green led
+    GPIO_SetBits(GPIOD, GPIO_Pin_13); // orange led
 
     //Delay(0x3FFFFF);
 
 
 #if 1
-    SysTick->VAL = INTERVAL;
-    SysTick->CTRL |= 1; // enable systick
     while(1)
     {
-      u32 tmp = SysTick->CTRL;
-      //u32 tmp = (*(volatile u32*)0xe000e010);
-      if ((tmp >> 16) & 1)
-      //if (SysTick->VAL == 0)
+      if (TIM3->SR & 1)
       {
-        SysTick->CTRL = 0;
-        SysTick->VAL = 0;
+        TIM3->SR &= (~1);
         break;
       }
     }
@@ -767,18 +751,11 @@ int main(void)
     //Delay(0x3FFFFF);
 
 #if 1
-    SysTick->VAL = INTERVAL;
-    SysTick->CTRL |= 1; // enable systick
     while(1)
     {
-      u32 tmp = SysTick->CTRL;
-      //u32 tmp = (*(volatile u32*)0xe000e010);
-
-      if ((tmp >> 16) & 1)
-      //if (SysTick->VAL == 0)
+      if (TIM3->SR & 1)
       {
-        SysTick->CTRL = 0;
-        SysTick->VAL = 0;
+        TIM3->SR &= (~1);
         break;
       }
     }
