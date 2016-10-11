@@ -676,8 +676,8 @@ int main(void)
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
   TIM_TimeBaseInitTypeDef time_init_struct;
 
-  time_init_struct.TIM_Period = 84000;
-  time_init_struct.TIM_Prescaler = 0;
+  time_init_struct.TIM_Period = 10; // 16 uint size
+  time_init_struct.TIM_Prescaler = 8400;
 
   time_init_struct.TIM_CounterMode = TIM_CounterMode_Up;
   time_init_struct.TIM_ClockDivision = TIM_CKD_DIV1; // TIM_CKD_DIV1: 0x0
