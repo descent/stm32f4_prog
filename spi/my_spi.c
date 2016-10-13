@@ -660,6 +660,82 @@ void delay(uint32_t delay )
   while(delay) delay--;
 }
 
+void init_spi2(void)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+	SPI_InitTypeDef SPI_InitStruct;
+	
+	// enable clock for used IO pins
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	
+	/* configure pins used by SPI1
+	 * PA5 = SCK
+	 * PA6 = MISO
+	 * PA7 = MOSI
+	 */
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	// connect SPI1 pins to SPI alternate function
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource15, GPIO_AF_SPI1);
+	
+	// enable clock for used IO pins
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
+	
+	/* Configure the chip select pin in this case we will use PB12 */
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIOB->BSRRL |= GPIO_Pin_12; // set PB12 high
+	// enable peripheral clock
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
+	
+	/* configure SPI1 in Mode 0 
+	 * CPOL = 0 --> clock is low when idle
+	 * CPHA = 0 --> data is sampled at the first edge
+	 */
+	SPI_InitStruct.SPI_Direction = SPI_Direction_2Lines_FullDuplex; // set to full duplex mode, seperate MOSI and MISO lines
+	SPI_InitStruct.SPI_Mode = SPI_Mode_Master;     // transmit in master mode, NSS pin has to be always high
+	SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b; // one packet of data is 8 bits wide
+	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;        // clock is low when idle
+	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;      // data sampled at first edge
+	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft | SPI_NSSInternalSoft_Set; // set the NSS management to internal and pull internal NSS high
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256; // SPI frequency is APB1 frequency / 256
+	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;// data is transmitted MSB first
+	SPI_Init(SPI2, &SPI_InitStruct); 
+	
+	SPI_Cmd(SPI2, ENABLE); // enable SPI1
+}
+
+u8 spi2_send(uint8_t data)
+{
+  u8 r;
+  SPI2->DR = data; // write data to be transmitted to the SPI data register
+  while( !(SPI2->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
+  while( !(SPI2->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
+  while( SPI2->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
+  return SPI2->DR; // return received data from SPI data register
+}
+
+uint8_t spi2_send_recv(uint8_t data){
+
+	SPI2->DR = data; // write data to be transmitted to the SPI data register
+	while( !(SPI2->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
+	while( !(SPI2->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
+	while( SPI2->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
+	return SPI2->DR; // return received data from SPI data register
+}
+
 void init_SPI1(void)
 {
 	
@@ -751,9 +827,10 @@ int main(void)
   SystemInit();
 #endif
   init_SPI1();
+  init_spi2();
   uint8_t received_val = 0;
 
-#if 1
+#if 0
   while(1)
   {
     //GPIOE->BSRRH |= GPIO_Pin_7; // set PE7 (CS) low
@@ -764,6 +841,27 @@ int main(void)
     #endif
     //GPIOE->BSRRL |= GPIO_Pin_7; // set PE7 (CS) high
     GPIOA->BSRRL |= GPIO_Pin_4; // set PE7 (CS) high
+  }
+#endif
+
+#if 1
+  while(1)
+  {
+    GPIOB->BSRRH |= GPIO_Pin_12; // set PB12 (CS) low
+
+    //SPI2->DR = 0x12; // write data to be transmitted to the SPI data register
+    //while( !(SPI2->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
+
+
+#if 0
+    while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE) == RESET);
+    /* 讀出 SPI2 接收的數據 */
+    SPI2_Buffer_Rx[Rx_Idx++] = SPI_I2S_ReceiveData(SPI2);
+#endif
+
+    spi2_send(0x91);  // transmit data
+    //received_val = spi2_send(0x95); // transmit dummy byte and receive data
+    GPIOB->BSRRL |= GPIO_Pin_12; // set PB12 (CS) high
   }
 #endif
 
