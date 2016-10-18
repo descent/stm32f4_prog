@@ -14,6 +14,14 @@ my_spi.elf: my_spi.o stm32f4xx_spi.o
 my_spi.o: my_spi.c
 	arm-none-eabi-gcc $(CFLAGS) $(INC) -c $< 
 
+spi1.bin: spi1.elf
+	arm-none-eabi-objcopy -Obinary $< $@
+
+spi1.elf: spi1.o stm32f4xx_spi.o
+	arm-none-eabi-gcc $(MYCFLAGS) -o $@ $^
+
+spi1.o: spi1.c
+	arm-none-eabi-gcc $(CFLAGS) $(INC) -c $< 
 
 stm32f4xx_spi.o: stm32f4xx_spi.c
 	arm-none-eabi-gcc $(CFLAGS) $(INC) -c $< 
