@@ -4,6 +4,8 @@
 #include "stm32f4xx_spi.h"
 #include "stm32f4xx_gpio.h"
 
+// #define PIN_PA
+
 #define SET_CPU_CLOCK
 
 #define VECT_TAB_OFFSET  0x0 /*!< Vector Table base offset field.  This value must be a multiple of 0x200. */
@@ -377,8 +379,6 @@ void USART_Cmd(USART_TypeDef* USARTx, FunctionalState NewState)
 void init_usart(uint32_t baudrate)
 {
 	
-	/* GPIOA clock enable */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);	
 	
 	/* enable peripheral clock for USART2 */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
@@ -386,6 +386,10 @@ void init_usart(uint32_t baudrate)
 	
 	GPIO_InitTypeDef GPIO_InitStructure;  
 	
+#ifdef PIN_PA
+  /* GPIOA clock enable */
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);	
+
 	/* GPIOA Configuration:  USART2 TX on PA2 */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -394,9 +398,25 @@ void init_usart(uint32_t baudrate)
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
 	GPIO_Init(GPIOA, &GPIO_InitStructure); 
 
-	/* Connect USART2 pins to AF2.   TX = PA2  RX = PA3*/ 
+	/* Connect USART2 pins to AF2.   TX = PA2  RX = PA3 */ 
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
+#else
+  /* uart2 TX = PD5  RX = PD6 */ 
+
+  /* GPIOD clock enable */
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);	
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
+  GPIO_Init(GPIOD, &GPIO_InitStructure); 
+
+  /* Connect USART2 pins to AF2.   TX = PD5  RX = PD6 */ 
+  GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
+  GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
+#endif
 	
 	USART_InitTypeDef USART_InitStructure;
 	USART_InitStructure.USART_BaudRate = baudrate;
@@ -814,20 +834,22 @@ void init_SPI1(void)
 	SPI_Cmd(SPI1, ENABLE); // enable SPI1
 }
 
-uint8_t SPI1_send(uint8_t data){
-
-	SPI1->DR = 0xfa; // write data to be transmitted to the SPI data register
-  SPI2->DR = 0xfe; // write data to be transmitted to the SPI data register
-	while( !(SPI1->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
-	while( !(SPI1->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
-	while( SPI1->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
+void spi1_spi2_send_recv(u8 spi1_data, u8 spi2_data, u8 *r_spi1_data, u8 *r_spi2_data)
+{
+  //SPI1->DR = 0xfa; // write data to be transmitted to the SPI data register
+  //SPI2->DR = 0xfe; // write data to be transmitted to the SPI data register
+  SPI1->DR = spi1_data; // write data to be transmitted to the SPI data register
+  SPI2->DR = spi2_data; // write data to be transmitted to the SPI data register
+  while( !(SPI1->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
+  while( !(SPI1->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
+  while( SPI1->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
+  spi1_data = SPI1->DR; // return received data from SPI data register
 #if 1
   while( !(SPI2->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
   while( !(SPI2->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
   while( SPI2->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
-  SPI2->DR; // return received data from SPI data register
+  *r_spi2_data = SPI2->DR; // return received data from SPI data register
 #endif
-	return SPI1->DR; // return received data from SPI data register
 }
 
 
@@ -857,19 +879,27 @@ void GPIO_ResetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 
   GPIOx->BSRRH = GPIO_Pin;
 }
-/**
- * @brief  Main program.
- * @param  None
- * @retval None
- */
+
+#define SIZE 10
+
 int main(void)
 {
+  u8 r_data[SIZE];
+  //u8 send_data[SIZE] = {0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19};
+  u8 send_data[SIZE] = {0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29};
+  u8 i=0;
+
 #ifdef SET_CPU_CLOCK
   SystemInit();
 #endif
   init_SPI1();
   init_spi2();
   uint8_t r1, r2;
+
+#if 1
+  init_usart(115200);
+  ur_puts(USART2, "Init complete! Hello World!\r\n");
+#endif
 
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
@@ -889,7 +919,7 @@ int main(void)
 
 
 #if 1
-  while(1)
+  for (i=0 ; i < SIZE ; ++i)
   {
 
     //GPIOE->BSRRH |= GPIO_Pin_7; // set PE7 (CS) low
@@ -908,10 +938,22 @@ int main(void)
     #endif
     #if 1
 
-    #if 1
-    SPI1_send(0x10); // transmit dummy byte and receive data
-    r1 = SPI1_send(0x00); // transmit dummy byte and receive data
-    #endif
+    u8 r_spi1_data;
+    u8 r_spi2_data;
+    spi1_spi2_send_recv(send_data[i], 0x22, &r_spi1_data, &r_spi2_data);
+    //r1 = SPI1_send(0x00); // transmit dummy byte and receive data
+
+#if 0
+    s32_itoa(r_spi1_data, str, 16);
+    ur_puts(USART2, "r_spi1_data: ");
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+
+    s32_itoa(r_spi2_data, str, 16);
+    ur_puts(USART2, "r_spi2_data: ");
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+#endif
 
 #if 0
     spi2_send(0x11); // transmit dummy byte and receive data
@@ -921,9 +963,20 @@ int main(void)
     #endif
     GPIOB->BSRRL |= GPIO_Pin_12; // set PB12 (CS) high
     GPIOA->BSRRL |= GPIO_Pin_4; // set PA4 (CS) high
-    //delay(0xFFFF);
+    r_data[i] = r_spi2_data;
+    //delay(0x3FFFF);
   }
 #endif
+  for (i=0 ; i < SIZE ; ++i)
+  {
+    char str[20]="";
+
+    s32_itoa(r_data[i], str, 16);
+    ur_puts(USART2, "r_spi2_data: ");
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+  }
+  while(1);
 
 #if 0
   while(1)
@@ -947,14 +1000,11 @@ int main(void)
 #endif
 
 #if 0
-  init_usart(115200);
-  ur_puts(USART2, "Init complete! Hello World!\r\n");
 
 
   RCC_ClocksTypeDef RCC_ClocksStatus;
   RCC_GetClocksFreq(&RCC_ClocksStatus);
 
-  char str[20]="";
 
   s32_itoa(RCC_ClocksStatus.SYSCLK_Frequency, str, 10);
   ur_puts(USART2, "SYSCLK_Frequency: ");
