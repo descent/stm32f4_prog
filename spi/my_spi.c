@@ -843,7 +843,7 @@ void spi1_spi2_send_recv(u8 spi1_data, u8 spi2_data, u8 *r_spi1_data, u8 *r_spi2
   while( !(SPI1->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
   while( !(SPI1->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
   while( SPI1->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
-  spi1_data = SPI1->DR; // return received data from SPI data register
+  *r_spi1_data = SPI1->DR; // return received data from SPI data register
 #if 1
   while( !(SPI2->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
   while( !(SPI2->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
@@ -940,7 +940,8 @@ int main(void)
 
     u8 r_spi1_data;
     u8 r_spi2_data;
-    spi1_spi2_send_recv(send_data[i], 0x22, &r_spi1_data, &r_spi2_data);
+    //spi1_spi2_send_recv(send_data[i], 0x22, &r_spi1_data, &r_spi2_data);
+    spi1_spi2_send_recv(0xee, send_data[i], &r_spi1_data, &r_spi2_data);
     //r1 = SPI1_send(0x00); // transmit dummy byte and receive data
 
 #if 0
@@ -963,10 +964,21 @@ int main(void)
     #endif
     GPIOB->BSRRL |= GPIO_Pin_12; // set PB12 (CS) high
     GPIOA->BSRRL |= GPIO_Pin_4; // set PA4 (CS) high
-    r_data[i] = r_spi2_data;
-    //delay(0x3FFFF);
+    r_data[i] = r_spi1_data;
+
+    char str[20]="";
+    s32_itoa(r_spi1_data, str, 16);
+    ur_puts(USART2, "r_spi1_data: ");
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+
+    s32_itoa(r_spi2_data, str, 16);
+    ur_puts(USART2, "r_spi2_data: ");
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
   }
 #endif
+  while(1);
   for (i=0 ; i < SIZE ; ++i)
   {
     char str[20]="";
@@ -976,6 +988,34 @@ int main(void)
     ur_puts(USART2, str);
     ur_puts(USART2, "\r\n");
   }
+
+
+#if 0
+  for (i=0 ; i < SIZE ; ++i)
+  {
+    GPIOA->BSRRH |= GPIO_Pin_4; // set PA4 (CS) low
+    GPIOB->BSRRH |= GPIO_Pin_12; // set PB12 (CS) low
+    #if 1
+
+    u8 r_spi1_data;
+    u8 r_spi2_data;
+    spi1_spi2_send_recv(send_data[i]+0x30, 0x22, &r_spi1_data, &r_spi2_data);
+
+    #endif
+    GPIOB->BSRRL |= GPIO_Pin_12; // set PB12 (CS) high
+    GPIOA->BSRRL |= GPIO_Pin_4; // set PA4 (CS) high
+    r_data[i] = r_spi2_data;
+  }
+  for (i=0 ; i < SIZE ; ++i)
+  {
+    char str[20]="";
+
+    s32_itoa(r_data[i], str, 16);
+    ur_puts(USART2, "r_spi2_data: ");
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+  }
+#endif
   while(1);
 
 #if 0
