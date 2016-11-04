@@ -781,6 +781,99 @@ int main(void)
 
   ur_puts(USART2, "Init sd ok\r\n");
 
+  static u8 cid[16];
+  u8 ret = SD_GetCID(cid);
+  if (ret == 0)
+  {
+    ur_puts(USART2, "get cid ok\r\n");
+  }
+  else
+  {
+    ur_puts(USART2, "get cid fail\r\n");
+  }
+
+#if 1
+  for (int i=0 ; i < 16 ; ++i)
+  {
+    char str[20]="";
+    s32_itoa(cid[i], str, 16);
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+  }
+#endif
+  char pnm[10]="";
+  pnm[0] = cid[1];
+  pnm[1] = cid[2];
+  pnm[2] = 0;
+    ur_puts(USART2, "oid: ");
+    ur_puts(USART2, pnm);
+    ur_puts(USART2, "\r\n");
+  pnm[0] = cid[3];
+  pnm[1] = cid[4];
+  pnm[2] = cid[5];
+  pnm[3] = cid[6];
+  pnm[4] = cid[7];
+  pnm[5] = 0;
+    ur_puts(USART2, "pnm: ");
+    ur_puts(USART2, pnm);
+    ur_puts(USART2, "\r\n");
+
+  ret = SD_GetCSD(cid);
+  if (ret == 0)
+  {
+    ur_puts(USART2, "get csd ok\r\n");
+  }
+  else
+  {
+    ur_puts(USART2, "get csd fail\r\n");
+  }
+
+  u8 byte,data,multi,blk_len;
+  u32 c_size;
+  u32 capacity=0;
+
+		blk_len = 0x0F & cid[6]; // this should equal 9 -> 512 bytes
+		/*	; get size into reg 
+			;	  7				8			9
+			; xxxx xxxx    xxxx xxxx    xxxx xxxx
+			;        ^^    ^^^^ ^^^^    ^^ 
+		*/
+		data =(cid[7] & 0x03)<<6;
+		data |= (cid[8] >> 2);
+		c_size = data << 4;
+		data =(cid[8] << 2 ) | ((cid[9] & 0xC0)>>6 );
+		c_size |= data;
+		
+		/*	; get multiplier
+			;	10			11
+			; xxxx xxxx    xxxx xxxx
+			;        ^^    ^
+		*/
+		multi = ((cid[10] & 0x03 ) << 1 ) ;
+		multi |= ((cid[11] & 0x80) >> 7);
+		// sectors = (size+1)<<(multiplier+2)
+		capacity = (c_size + 1)<<(multi + blk_len + 2);
+
+  char str[20]="";
+  s32_itoa(capacity, str, 16);
+    ur_puts(USART2, "hex:\r\n");
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+
+  s32_itoa(capacity, str, 10);
+    ur_puts(USART2, "dec:\r\n");
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+#if 0
+  for (int i=0 ; i < 16 ; ++i)
+  {
+    char str[20]="";
+    s32_itoa(cid[i], str, 16);
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+  }
+#endif
+
   while(1);
 #if 0
   while(1)
