@@ -1,7 +1,9 @@
 #ifndef STM32_H
 #define STM32_H
 
-#define STACK_SIZE 64
+#include "stm32f4xx_usart.h"
+
+#define STACK_SIZE 2048
 extern unsigned long _etext;
 extern unsigned long _data;
 extern unsigned long _edata;
@@ -30,7 +32,7 @@ void int_isr(void)
 
 typedef void (*pfnISR)(void);
 __attribute__((section(".stackares")))
-static unsigned long pulStack[STACK_SIZE];
+static u8 pulStack[STACK_SIZE];
 
 
 __attribute__((section(".isr_vector")))
