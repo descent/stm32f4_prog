@@ -106,6 +106,8 @@ void init_spi1(void)
   SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
   SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256; // SPI frequency is APB2 frequency / 4
   SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;// data is transmitted MSB first
+  SPI_InitStruct.SPI_CRCPolynomial = 7;
+
   SPI_Init(SPI1, &SPI_InitStruct); 
   
   SPI_Cmd(SPI1, ENABLE); // enable SPI1
@@ -359,7 +361,7 @@ u8 SD_Initialize(void)
 		}
 	}
 	SD_DisSelect();//取消片選
-	SD_SPI_SpeedHigh();//高速
+	//SD_SPI_SpeedHigh();//高速
 	if(SD_Type)return 0;
 	else if(r1)return r1; 	   
 	return 0xaa;//其他錯誤
