@@ -1,25 +1,23 @@
 CFLAGS=-g
-#MYCFLAGS=-Wl,-T./stm32.ld -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
-
-CFLAGS=-fno-common -O0 -g -mcpu=cortex-m3 -mthumb -fno-builtin-function -fno-builtin -ffreestanding -nostartfiles -fno-common
-MYCXXFLAGS = -fno-exceptions -fno-rtti
-
-LD_FLAGS=-Wl,-T./stm32.ld -nostartfiles -fno-builtin-function -fno-builtin -ffreestanding
-
+MYCFLAGS=-Wl,-T./stm32.ld -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
 #MYCFLAGS=-Wl,-T./stm32.ld -g -O2 -mlittle-endian -mthumb -mcpu=cortex-m4 -ffreestanding -nostdlib 
 
-CXXFLAGS += $(MYCXXFLAGS) $(CFLAGS)
+CFLAGS=-nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -I../myur_168M/ -I../inc/
 
-myur_168M.bin: myur_168M.elf
+spi_sdcard.bin: spi_sdcard.elf
 	arm-none-eabi-objcopy -Obinary $< $@
 
-myur_168M.o: myur_168M.cpp stm32.h stm32f4xx_spi.h stm32f4xx.h core_cm4.h \
- core_cmInstr.h core_cmFunc.h core_cm4_simd.h stm32f4xx_usart.h \
-  stm32f4xx_rcc.h stm32f4xx_gpio.h
-	arm-none-eabi-g++ $(CXXFLAGS) $(INC) -c $< 
+spi_sdcard.elf: spi_sdcard.o stm32f4xx_spi.o mmc_sd.o
+	arm-none-eabi-gcc $(MYCFLAGS) -o $@ $^
 
-myur_168M.elf: myur_168M.o
-	arm-none-eabi-gcc $(LD_FLAGS) $(INC) -o $@ $< 
+spi_sdcard.o: spi_sdcard.c
+	arm-none-eabi-gcc $(CFLAGS) $(INC) -c $< 
+sd.o: sd.c
+	arm-none-eabi-gcc $(CFLAGS) $(INC) -c $< 
+mmc_sd.o: mmc_sd.c mmc_sd.h
+	arm-none-eabi-gcc $(CFLAGS) $(INC) -c $< 
 
+stm32f4xx_spi.o: stm32f4xx_spi.c
+	arm-none-eabi-gcc $(CFLAGS) $(INC) -c $< 
 clean:
 	rm -rf *.o *.bin *.elf

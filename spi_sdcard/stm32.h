@@ -1,9 +1,6 @@
 #ifndef STM32_H
 #define STM32_H
-#define GPIOB_CRL     (*(volatile unsigned long *)0x40010c00)
-#define GPIOB_BSRR    (*(volatile unsigned long *)0x40010c10)
-#define GPIOB_BRR     (*(volatile unsigned long *)0x40010c14)
-#define RCC_APB2ENR   (*(volatile unsigned long *)0x40021018)
+
 #define STACK_SIZE 64
 extern unsigned long _etext;
 extern unsigned long _data;
@@ -11,7 +8,7 @@ extern unsigned long _edata;
 extern unsigned long _bss;
 extern unsigned long _ebss;
 
-extern "C" { int main(); }
+int main(void);
 
 void ResetISR(void)
 {
@@ -26,33 +23,46 @@ void ResetISR(void)
   main();
 }
 
+void int_isr(void)
+{
+}
+
+
 typedef void (*pfnISR)(void);
 __attribute__((section(".stackares")))
 static unsigned long pulStack[STACK_SIZE];
 
-void int_isr(void);
+
 __attribute__((section(".isr_vector")))
 pfnISR VectorTable[]=
 {
   (pfnISR)((unsigned long)pulStack+sizeof(pulStack)),
-  ResetISR,
-#if 1
-  ResetISR,
-  ResetISR,
-  ResetISR,
-  ResetISR,
-  ResetISR,
-  ResetISR,
-  ResetISR,
-  ResetISR,
-  ResetISR,
-  int_isr, // 11, svc
-  int_isr, 
-  int_isr, 
-  int_isr, 
-  int_isr, // 15, systick
-#endif
+  ResetISR, // 1
+  int_isr,
+  int_isr,
+  int_isr,
+  int_isr,
+  int_isr,
+  int_isr,
+  int_isr,
+  int_isr,
+  int_isr,
+  int_isr,    // 11
+  int_isr,
+  int_isr,
+  int_isr, // 14
+  int_isr, // 15
 
+#ifdef EXT_INT
+  // External Interrupts
+  wwdg_isr,                   // Window WatchDog
+  pvd_isr,                   // PVD through EXTI Line detection                      
+  tamp_stamp_isr,            // Tamper and TimeStamps through the EXTI line
+  rtc_wkup_isr,              // RTC Wakeup through the EXTI line                     
+  flash_isr,                 // FLASH                                           
+  rcc_isr,                   // RCC                                             
+  exti0_isr                  // EXTI Line0 
+#endif
 };
 
 #endif
