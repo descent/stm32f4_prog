@@ -26,46 +26,6 @@
 #define PLLI2S_R   5
 
 // no sign version
-char* s32_itoa(uint32_t n, char* str, int radix)
-{
-  char digit[]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  char* p=str;
-  char* head=str;
-  //int radix = 10;
-
-//  if(!p || radix < 2 || radix > 36)
-//    return p;
-  if (n==0)
-  {
-    *p++='0';
-    *p=0;
-    return str;
-  }
-  if (radix == 10 && n < 0)
-  {
-    *p++='-';
-    n= -n;
-  }
-  while(n)
-  {
-    *p++=digit[n%radix];
-    //s32_put_char(*(p-1), (u8*)(0xb8000+80*2));
-    n/=radix;
-  }
-  *p=0;
-  #if 1
-  for (--p; head < p ; ++head, --p)
-  {
-    char temp=*head;
-    if (*(p-1) != '-')
-    {
-      *head=*p;
-      *p=temp;
-    }
-  }
-  #endif
-  return str;
-}
 
 static __I uint8_t APBAHBPrescTable[16] = {0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9};
 
@@ -757,6 +717,54 @@ uint8_t xchg_spi (uint8_t dat)
   return SPI1_send(dat);
 }
 
+char* s32_itoa(uint32_t n, char* str, int radix)
+{
+  char digit[]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  char* p=str;
+  char* head=str;
+  uint8_t count=0;
+  //int radix = 10;
+
+//  if(!p || radix < 2 || radix > 36)
+//    return p;
+  if (n==0)
+  {
+    *p++='0';
+    *p++ = '0';
+    *p=0;
+    return str;
+  }
+  if (radix == 10 && n < 0)
+  {
+    *p++='-';
+    n= -n;
+  }
+
+  while(n)
+  {
+    ++count;
+    *p++=digit[n%radix];
+    //s32_put_char(*(p-1), (u8*)(0xb8000+80*2));
+    n/=radix;
+  }
+  if (count == 1)
+    *p++ = '0';
+
+  *p=0;
+  #if 1
+  for (--p; head < p ; ++head, --p)
+  {
+    char temp=*head;
+    if (*(p-1) != '-')
+    {
+      *head=*p;
+      *p=temp;
+    }
+  }
+  #endif
+  return str;
+}
+
 /**
  * @brief  Main program.
  * @param  None
@@ -780,6 +788,13 @@ int main(void)
   }
 
   ur_puts(USART2, "Init sd ok\r\n");
+  char str[20]={0};
+  #if 0
+  s32_itoa(2, str, 16);
+    ur_puts(USART2, str);
+    ur_puts(USART2, "\r\n");
+  while(1);
+  #endif
 
   static u8 cid[16];
   u8 ret = SD_GetCID(cid);
@@ -793,13 +808,13 @@ int main(void)
   }
 
 #if 1
+  ur_puts(USART2, "cid:\r\n");
   for (int i=0 ; i < 16 ; ++i)
   {
-    char str[20]="";
     s32_itoa(cid[i], str, 16);
     ur_puts(USART2, str);
-    ur_puts(USART2, "\r\n");
   }
+  ur_puts(USART2, "\r\n");
 #endif
   char pnm[10]="";
   pnm[0] = cid[1];
@@ -827,6 +842,13 @@ int main(void)
   {
     ur_puts(USART2, "get csd fail\r\n");
   }
+  ur_puts(USART2, "csd:\r\n");
+  for (int i=0 ; i < 16 ; ++i)
+  {
+    s32_itoa(cid[i], str, 16);
+    ur_puts(USART2, str);
+  }
+  ur_puts(USART2, "\r\n");
 
   u8 byte,data,multi,blk_len;
   u32 c_size;
@@ -854,7 +876,6 @@ int main(void)
 		// sectors = (size+1)<<(multiplier+2)
 		capacity = (c_size + 1)<<(multi + blk_len + 2);
 
-  char str[20]="";
   s32_itoa(capacity, str, 16);
     ur_puts(USART2, "hex:\r\n");
     ur_puts(USART2, str);
@@ -864,15 +885,7 @@ int main(void)
     ur_puts(USART2, "dec:\r\n");
     ur_puts(USART2, str);
     ur_puts(USART2, "\r\n");
-#if 0
-  for (int i=0 ; i < 16 ; ++i)
-  {
-    char str[20]="";
-    s32_itoa(cid[i], str, 16);
-    ur_puts(USART2, str);
-    ur_puts(USART2, "\r\n");
-  }
-#endif
+
 
   while(1);
 #if 0
