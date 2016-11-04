@@ -1,8 +1,7 @@
-CFLAGS=-g
 MYCFLAGS=-Wl,-T./stm32.ld -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
 #MYCFLAGS=-Wl,-T./stm32.ld -g -O2 -mlittle-endian -mthumb -mcpu=cortex-m4 -ffreestanding -nostdlib 
 
-CFLAGS=-nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -I../myur_168M/ -I../inc/
+CFLAGS=-nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -I../myur_168M/ -I../inc/ -std=c99 -g
 
 spi_sdcard.bin: spi_sdcard.elf
 	arm-none-eabi-objcopy -Obinary $< $@
