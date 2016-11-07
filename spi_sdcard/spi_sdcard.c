@@ -850,6 +850,28 @@ int main(void)
   }
   ur_puts(USART2, "\r\n");
 
+  u32 sd_size = SD_GetSectorCount(); //得到 sector count
+
+  s32_itoa(sd_size, str, 10);
+  ur_puts(USART2, "sd_size: ");
+  ur_puts(USART2, str);
+
+  u8 buf[512];
+  u32 sec = 0;
+  if(SD_ReadDisk(buf, sec, 1) == 0)   //讀取0扇區的內容
+  {               
+    ur_puts(USART2, "dump sector 0: \r\n");
+    for (int i=0 ; i < 512; ++i)
+    {
+      s32_itoa(buf[i], str, 16);
+      ur_puts(USART2, str);
+      ur_puts(USART2, " ");
+      if (i%16 == 0)
+        ur_puts(USART2, "\r\n");
+    }
+  }
+#if 0
+
   u8 byte,data,multi,blk_len;
   u32 c_size;
   u32 capacity=0;
@@ -885,7 +907,7 @@ int main(void)
     ur_puts(USART2, "dec:\r\n");
     ur_puts(USART2, str);
     ur_puts(USART2, "\r\n");
-
+#endif
 
   while(1);
 #if 0
