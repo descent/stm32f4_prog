@@ -855,6 +855,7 @@ int main(void)
   s32_itoa(sd_size, str, 10);
   ur_puts(USART2, "sd_size: ");
   ur_puts(USART2, str);
+  ur_puts(USART2, "\r\n");
 
   u8 buf[512];
   u32 sec = 0;
@@ -863,11 +864,11 @@ int main(void)
     ur_puts(USART2, "dump sector 0: \r\n");
     for (int i=0 ; i < 512; ++i)
     {
+      if (i%16 == 0)
+        ur_puts(USART2, "\r\n");
       s32_itoa(buf[i], str, 16);
       ur_puts(USART2, str);
       ur_puts(USART2, " ");
-      if (i%16 == 0)
-        ur_puts(USART2, "\r\n");
     }
   }
 #if 0
