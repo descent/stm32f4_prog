@@ -10,5 +10,11 @@ typedef unsigned int u32;
 
 typedef unsigned long long u64;
 
+typedef unsigned int    UINT;
+typedef u8 BYTE;
+typedef u32 DWORD;
+typedef unsigned short  WCHAR;
+typedef unsigned short  WORD;
+
 #endif
 
