@@ -1,5 +1,10 @@
 #include "mmc_sd.h"			   
 
+#ifndef STM32F407
+#include <stdint.h>
+#include <stdio.h>
+#endif
+
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供學習使用，未經作者許可，不得用於其它任何用途
 //ALIENTEK MiniSTM32開發板
@@ -15,18 +20,22 @@
 //
 void spi1_set_speed(u8 prescaler)
 {
+#ifdef STM32F407
   SPI1->CR1 &= 0xffc7;
   SPI1->CR1 |= prescaler;
   SPI_Cmd(SPI1, ENABLE);
+#endif
 }
 
 uint8_t SPI1_ReadWriteByte(uint8_t data)
 {
+#ifdef STM32F407
   SPI1->DR = data; // write data to be transmitted to the SPI data register
   while( !(SPI1->SR & SPI_I2S_FLAG_TXE) ); // wait until transmit complete
   while( !(SPI1->SR & SPI_I2S_FLAG_RXNE) ); // wait until receive complete
   while( SPI1->SR & SPI_I2S_FLAG_BSY ); // wait until SPI is not busy anymore
   return SPI1->DR; // return received data from SPI data register
+#endif
 }
 					   
 u8  SD_Type=0;//SD卡的類型 
@@ -36,23 +45,30 @@ u8  SD_Type=0;//SD卡的類型
 //返回值:讀到的數據
 u8 SD_SPI_ReadWriteByte(u8 data)
 {
+#ifdef STM32F407
 	return SPI1_ReadWriteByte(data);
+#endif
 }	  
 //SD卡初始化的時候,需要低速
 void SD_SPI_SpeedLow(void)
 {
+#ifdef STM32F407
   //SPI1_SetSpeed(SPI_BaudRatePrescaler_256);//設置到低速模式	
   spi1_set_speed(SPI_BaudRatePrescaler_256);
+#endif
 }
 //SD卡正常工作的時候,可以高速了
 void SD_SPI_SpeedHigh(void)
 {
+#ifdef STM32F407
   //SPI1_SetSpeed(SPI_BaudRatePrescaler_2);//設置到高速模式	
   spi1_set_speed(SPI_BaudRatePrescaler_2);
+#endif
 }
 
 void init_spi1(void)
 {
+#ifdef STM32F407
   GPIO_InitTypeDef GPIO_InitStruct;
   SPI_InitTypeDef SPI_InitStruct;
 	
@@ -111,12 +127,14 @@ void init_spi1(void)
   SPI_Init(SPI1, &SPI_InitStruct); 
   
   SPI_Cmd(SPI1, ENABLE); // enable SPI1
+#endif
 }
 
 
 //SPI硬件層初始化
 void SD_SPI_Init(void)
 {
+#ifdef STM32F407
   //設置硬件上與SD卡相關聯的控制引腳輸出
 	//禁止其他外設(NRF/W25Q64)對SD卡產生影響
 
@@ -135,21 +153,26 @@ void SD_SPI_Init(void)
   init_spi1();
 	//SD_CS=1;
   SD_CS(1);
+#endif
 }
 ///////////////////////////////////////////////////////////////////////////////////
 //取消選擇,釋放SPI匯流排
 void SD_DisSelect(void)
 {
+#ifdef STM32F407
 	SD_CS(1);
  	SD_SPI_ReadWriteByte(0xff);//提供額外的8個時鐘
+#endif
 }
 //選擇sd卡,並且等待卡準備OK
 //返回值:0,成功;1,失敗;
 u8 SD_Select(void)
 {
+#ifdef STM32F407
 	SD_CS(0);
 	if(SD_WaitReady()==0)return 0;//等待成功
 	SD_DisSelect();
+#endif
 	return 1;//等待失敗
 }
 //等待卡準備好
@@ -366,6 +389,22 @@ u8 SD_Initialize(void)
 	else if(r1)return r1; 	   
 	return 0xaa;//其他錯誤
 }
+
+#ifndef STM32F407
+extern FILE *fs;
+u8 disk_image_read(u8*buf,u32 sector,u8 cnt)
+{
+  u32 read_len = cnt * 512;
+  u32 rlen = 0;
+  printf("read_len: %d\n", read_len);
+  fseek(fs, sector * 512 , SEEK_SET);
+  rlen = fread(buf, 1, read_len, fs);
+  printf("rlen: %d\n", rlen);
+  //print_packet(buf, 512);
+  return 0;
+}
+#endif
+
 //讀SD卡
 //buf:數據緩存區
 //sector:扇區
