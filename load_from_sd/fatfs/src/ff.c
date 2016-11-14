@@ -116,6 +116,11 @@
 #include "ff.h"			/* Declarations of FatFs API */
 #include "diskio.h"		/* Declarations of disk I/O functions */
 
+#ifndef STM32F407
+#include <stdio.h>
+#endif
+
+
 
 
 
@@ -774,6 +779,7 @@ FRESULT sync_window (
 }
 #endif
 
+void print_packet(u8 *packet, u32 len);
 
 static
 FRESULT move_window (
@@ -781,13 +787,16 @@ FRESULT move_window (
 	DWORD sector	/* Sector number to make appearance in the fs->win[] */
 )
 {
+  //printf("fs->winsect: %x, sector: %x\n", fs->winsect, sector);
 	if (sector != fs->winsect) {	/* Changed current window */
+          printf("xx\n");
 #if !_FS_READONLY
 		if (sync_window(fs) != FR_OK)
 			return FR_DISK_ERR;
 #endif
 		if (disk_read(fs->drv, fs->win, sector, 1))
 			return FR_DISK_ERR;
+                //print_packet(fs->win, 512);
 		fs->winsect = sector;
 	}
 
@@ -2265,6 +2274,10 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 	fmt = FS_FAT12;
 	if (nclst >= MIN_FAT16) fmt = FS_FAT16;
 	if (nclst >= MIN_FAT32) fmt = FS_FAT32;
+
+        static char *fat_str[] = {"", "fat12", "fat16", "fat32"};
+        printf("fat type: %s\n", fat_str[fmt]);
+
 
 	/* Boundaries and Limits */
 	fs->n_fatent = nclst + 2;							/* Number of FAT entries */
