@@ -175,6 +175,8 @@ DRESULT disk_ioctl (
 	void *buff		/* Buffer to send/receive control data */
 )
 {
+#ifdef STM32F407
+
 	DRESULT res;						  			     
 	if(pdrv==SD_CARD)//SD卡
 	{
@@ -230,6 +232,7 @@ DRESULT disk_ioctl (
 	    }
 	}else res=RES_ERROR;//其他的不支持
     return res;
+#endif
 }
 #endif
 //獲得時間
