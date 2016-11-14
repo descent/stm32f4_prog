@@ -16,10 +16,6 @@ extern "C" {
 #include "type.h"
 
 
-typedef unsigned int    UINT;
-typedef u8 BYTE;
-//typedef unsigned short  WORD;
-//typedef u32 DWORD;
 /* Status of Disk Functions */
 typedef BYTE	DSTATUS;
 
