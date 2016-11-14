@@ -1,10 +1,14 @@
 #ifndef _MMC_SD_H_
 #define _MMC_SD_H_		 
 
+#ifdef STM32F407
 #include "stm32f4xx_usart.h"
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_spi.h"
 #include "stm32f4xx_gpio.h"
+#endif
+
+#include "type.h"
 
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供學習使用，未經作者許可，不得用於其它任何用途
@@ -58,6 +62,7 @@
 #define MSD_PARAMETER_ERROR        0x40
 #define MSD_RESPONSE_FAILURE       0xFF
  							   						 	 
+#ifdef STM32F407
 //這部分應根據具體的連線來修改!
 //MiniSTM32開發板使用的是PA3作為SD卡的CS腳.
 //#define	SD_CS  PAout(3) 	//SD卡片選引腳					    	  
@@ -67,7 +72,7 @@ if (value == 0) \
   GPIOA->BSRRH |= GPIO_Pin_4; \
 else \
   GPIOA->BSRRL |= GPIO_Pin_4; // set PA4 (CS) high
-
+#endif
 
 
 extern u8  SD_Type;			//SD卡的類型
@@ -83,6 +88,10 @@ u8 SD_WriteDisk(u8*buf,u32 sector,u8 cnt);		//寫塊
 u32 SD_GetSectorCount(void);   					//讀扇區數
 u8 SD_GetCID(u8 *cid_data);                     //讀SD卡CID
 u8 SD_GetCSD(u8 *csd_data);                     //讀SD卡CSD
+
+#ifndef STM32F407
+u8 disk_image_read(u8*buf,u32 sector,u8 cnt);
+#endif
  
 #endif
 
