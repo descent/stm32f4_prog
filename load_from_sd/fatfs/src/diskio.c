@@ -14,6 +14,10 @@
 #include "mmc_sd.h"
 #include <stdlib.h>
 
+#ifndef STM32F407
+#include <stdio.h>
+#endif
+
 #define mymalloc malloc
 #define myfree free
 
@@ -45,10 +49,26 @@ DSTATUS disk_initialize (
 	BYTE pdrv				/* Physical drive nmuber (0..) */
 )
 {
+#ifndef STM32F407
+  extern FILE *fs;
+  const char *fn = "fat32.img";
+
+  fs = fopen(fn, "r");
+  if (fs == NULL)
+  {
+    perror("open imagefile.img error\n");
+    exit(1);
+  }
+  printf("open %s ok\n", fn);
+
+  return 0;
+#endif
 	u8 res=0;	    
 	switch(pdrv)
 	{
 		case SD_CARD://SD卡
+                  printf("init sd card\n");
+#ifdef STM32F407
 			res = SD_Initialize();//SD_Initialize() 
 		 	if(res)//STM32 SPI的bug,在sd卡操作失敗的時候如果不執行下面的語句,可能導致SPI讀寫異常
 			{
@@ -56,6 +76,7 @@ DSTATUS disk_initialize (
 				SD_SPI_ReadWriteByte(0xff);//提供額外的8個時鐘
 				SD_SPI_SpeedHigh();
 			}
+#endif
   			break;
 #if 0
 		case EX_FLASH://外部flash
@@ -96,6 +117,7 @@ DRESULT disk_read (
 	switch(pdrv)
 	{
 		case SD_CARD://SD卡
+                        #ifdef STM32F407
 			res=SD_ReadDisk(buff,sector,count);	 
 		 	if(res)//STM32 SPI的bug,在sd卡操作失敗的時候如果不執行下面的語句,可能導致SPI讀寫異常
 			{
@@ -103,6 +125,13 @@ DRESULT disk_read (
 				SD_SPI_ReadWriteByte(0xff);//提供額外的8個時鐘
 				SD_SPI_SpeedHigh();
 			}
+                        #else
+                        printf("call disk_image_read()\n");
+                        disk_image_read(buff, sector, count);
+                        return RES_OK;	 
+                        #endif
+
+
 			break;
                 #if 0
 		case EX_FLASH://外部flash
