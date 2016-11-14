@@ -1,5 +1,8 @@
 #include "elf.h"
 #include "type.h"
+#include "fatfs/exfuns/exfuns.h"
+
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -75,9 +78,28 @@ int load_elf()
   }
 }
 
+
+
 #ifdef TEST_MAIN
 int main(int argc, char *argv[])
 {
+  u32 total,free;
+
+  exfuns_init(); // 配置 fatfs 相關變數所使用的記憶體
+  if (FR_INVALID_DRIVE == f_mount(fs[0],"0:",1)) // 掛載SD卡 
+  {
+    printf("f_mount fail\n");
+    return -1;
+  }
+
+  while(exf_getfree("0",&total,&free))    //得到SD卡的總容量和剩餘容量
+  {
+  }
+
+  printf("total: %d, free: %d\n", total, free);
+
+
+#if 0
   FILE *fs;
   fs = fopen("/home/descent/git/jserv-course/stm32f4_prog/load_from_sd/loaded_prog/myur_168M.elf", "r");
   //fs = fopen("/home/descent/git/simple_compiler/c_parser", "r");
@@ -85,6 +107,7 @@ int main(int argc, char *argv[])
   
   load_elf();
   fclose(fs);
+#endif
   return 0;
 }
 #endif
