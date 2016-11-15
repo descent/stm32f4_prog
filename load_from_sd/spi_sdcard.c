@@ -6,6 +6,8 @@
 #include "stm32f4xx_spi.h"
 #include "stm32f4xx_gpio.h"
 
+#include "fatfs/exfuns/exfuns.h"
+
 #define SET_CPU_CLOCK
 
 #define VECT_TAB_OFFSET  0x0 /*!< Vector Table base offset field.  This value must be a multiple of 0x200. */
@@ -873,6 +875,30 @@ int main(void)
       ur_puts(USART2, " ");
     }
   }
+
+  u32 total,free;
+  exfuns_init(); // 配置 fatfs 相關變數所使用的記憶體
+  if (FR_INVALID_DRIVE == f_mount(fs[0],"0:",1)) 
+  {
+    ur_puts(USART2, "f_mount fail\r\n");
+    return -1;
+  }
+
+  while(exf_getfree("0:",&total,&free))    //得到SD卡的總容量和剩餘容量
+  {
+  }
+  //printf("total: %d, free: %d\n", total, free);
+
+  ur_puts(USART2, "total: ");
+  s32_itoa(total, str, 16);
+  ur_puts(USART2, str);
+
+  ur_puts(USART2, ", free: ");
+  s32_itoa(free, str, 16);
+  ur_puts(USART2, str);
+  ur_puts(USART2, "\r\n");
+
+
 #if 0
 
   u8 byte,data,multi,blk_len;
