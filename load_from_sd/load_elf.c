@@ -86,13 +86,13 @@ int main(int argc, char *argv[])
   u32 total,free;
 
   exfuns_init(); // 配置 fatfs 相關變數所使用的記憶體
-  if (FR_INVALID_DRIVE == f_mount(fs[3],"3:",1)) 
+  if (FR_INVALID_DRIVE == f_mount(fs[2],"2:",1)) 
   {
     printf("f_mount fail\n");
     return -1;
   }
 
-  while(exf_getfree("3:",&total,&free))    //得到SD卡的總容量和剩餘容量
+  while(exf_getfree("2:",&total,&free))    //得到SD卡的總容量和剩餘容量
   {
   }
 
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
   char line[82]; /* Line buffer */
   FRESULT fr;    /* FatFs return code */
   //fr = f_open(&fil, "1.txt", FA_READ);
-  fr = f_open(&fil, "3:\\2.txt", FA_READ);
+  fr = f_open(&fil, "2:\\1.txt", FA_READ);
   if (fr) return (int)fr;
 
 
@@ -115,6 +115,40 @@ int main(int argc, char *argv[])
     /* Close the file */
     f_close(&fil);
 #endif
+
+  DIR dir;
+  static FILINFO f_info; // why need static, if no static, f_readdir will get segment fault
+  FRESULT ret;
+
+  char path[255] = "2:\\";
+  ret = f_opendir(&dir, path);
+  if (ret == FR_OK)
+  {
+    #if 1
+    while(1)
+    {
+      ret = f_readdir (&dir, &f_info);
+      if (ret != FR_OK || f_info.fname[0] == 0) 
+        break;  /* Break on error or end of dir */
+      if (f_info.fattrib & AM_DIR)                     /* It is a directory */
+      {
+        //int i = strlen(path);
+        //sprintf(&path[i], "/%s", f_info.fname);
+        #if 0
+        ret = scan_files(path);                    /* Enter the directory */
+        if (res != FR_OK) break;
+                path[i] = 0;
+        #endif
+      } 
+      else 
+      {                                       /* It is a file. */
+        printf("%s/%s\n", path, f_info.fname);
+      }
+    }
+    #endif
+    f_closedir(&dir);
+  }
+
 #if 0
   FILE *fs;
   fs = fopen("/home/descent/git/jserv-course/stm32f4_prog/load_from_sd/loaded_prog/myur_168M.elf", "r");
