@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#define TEST_DIR
 
 void s32_memcpy(u8 *dest, const u8 *src, u32 n)
 {
@@ -109,7 +110,8 @@ int main(int argc, char *argv[])
   char buf[BUF_SIZE]; /* Line buffer */
   FRESULT fr;    /* FatFs return code */
   //fr = f_open(&fil, "1.txt", FA_READ);
-  const char *fn = "2:/MYUR_1~1.ELF";
+  //const char *fn = "2:/MYUR_1~1.ELF";
+  const char *fn = "2:/myur_168M.elf";
   fr = f_open(&fil, fn, FA_READ);
   if (fr) 
   {
@@ -156,7 +158,10 @@ int main(int argc, char *argv[])
         f_read(&fil, buf, elf_pheader.p_filesz, &r_len);
         printf("yy r_len: %d\n", r_len);
         print_packet(buf, r_len);
+        #if 0
         s32_memcpy(elf_pheader.p_vaddr, buf, r_len);
+        (*(void(*)())elf_code)();
+        #endif
       }
     }
     break;
@@ -172,6 +177,10 @@ int main(int argc, char *argv[])
   DIR dir;
   static FILINFO f_info; // why need static, if no static, f_readdir will get segment fault
   FRESULT ret;
+  TCHAR long_name_pool[_MAX_LFN * 2 + 1];
+
+  f_info.lfsize = _MAX_LFN * 2 + 1;
+  f_info.lfname = long_name_pool;
 
   char path[255] = "2:\\";
   ret = f_opendir(&dir, path);
@@ -196,6 +205,7 @@ int main(int argc, char *argv[])
       else 
       {                                       /* It is a file. */
         printf("%s/%s\n", path, f_info.fname);
+        printf("%s/%s\n", path, f_info.lfname);
       }
     }
     #endif
