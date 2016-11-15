@@ -1,6 +1,7 @@
 #ifndef STM32_H
 #define STM32_H
 
+#include "type.h"
 #include "stm32f4xx_usart.h"
 
 #define STACK_SIZE 2048
