@@ -15,7 +15,7 @@
 //All rights reserved									  
 //////////////////////////////////////////////////////////////////////////////////
 
-extern FATFS *fs[2];  
+extern FATFS *fs[];  
 extern FIL *file;	 
 extern FIL *ftemp;	 
 extern UINT br,bw;
