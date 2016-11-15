@@ -55,7 +55,7 @@ u8 exfuns_init(void)
   {
     //fs[i]=(FATFS*)mymalloc(sizeof(FATFS));
     fs[i] = &fs_pool[i];
-    printf("%d fs[i]: %p\n", i, fs[i]);
+    //printf("%d fs[i]: %p\n", i, fs[i]);
   }
   file = &fil_pool[0];		//為file申請內存
   ftemp = &fil_pool[1];		//為ftemp申請內存
