@@ -86,19 +86,35 @@ int main(int argc, char *argv[])
   u32 total,free;
 
   exfuns_init(); // 配置 fatfs 相關變數所使用的記憶體
-  if (FR_INVALID_DRIVE == f_mount(fs[0],"0:",1)) // 掛載SD卡 
+  if (FR_INVALID_DRIVE == f_mount(fs[3],"3:",1)) 
   {
     printf("f_mount fail\n");
     return -1;
   }
 
-  while(exf_getfree("0",&total,&free))    //得到SD卡的總容量和剩餘容量
+  while(exf_getfree("3:",&total,&free))    //得到SD卡的總容量和剩餘容量
   {
   }
 
   printf("total: %d, free: %d\n", total, free);
+#if 1
 
 
+  FIL fil;       /* File object */
+  char line[82]; /* Line buffer */
+  FRESULT fr;    /* FatFs return code */
+  //fr = f_open(&fil, "1.txt", FA_READ);
+  fr = f_open(&fil, "3:\\2.txt", FA_READ);
+  if (fr) return (int)fr;
+
+
+    /* Read all lines and display it */
+    while (f_gets(line, sizeof line, &fil))
+        printf(line);
+
+    /* Close the file */
+    f_close(&fil);
+#endif
 #if 0
   FILE *fs;
   fs = fopen("/home/descent/git/jserv-course/stm32f4_prog/load_from_sd/loaded_prog/myur_168M.elf", "r");
