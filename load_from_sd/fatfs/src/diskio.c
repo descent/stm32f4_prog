@@ -334,10 +334,10 @@ DWORD get_fattime (void)
 //動態分配內存
 void *ff_memalloc (UINT size)			
 {
-	return (void*)mymalloc(size);
+	//return (void*)mymalloc(size);
 }
 //釋放內存
 void ff_memfree (void* mf)		 
 {
-	myfree(mf);
+	//myfree(mf);
 }
