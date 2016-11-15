@@ -263,9 +263,11 @@ typedef enum IRQn
   * @{
   */  
 /*!< STM32F10x Standard Peripheral Library old types (maintained for legacy purpose) */
+#if 0
 typedef int32_t  s32;
 typedef int16_t s16;
 typedef int8_t  s8;
+#endif
 
 typedef const int32_t sc32;  /*!< Read Only */
 typedef const int16_t sc16;  /*!< Read Only */
@@ -279,9 +281,11 @@ typedef __I int32_t vsc32;  /*!< Read Only */
 typedef __I int16_t vsc16;  /*!< Read Only */
 typedef __I int8_t vsc8;   /*!< Read Only */
 
+#if 0
 typedef uint32_t  u32;
 typedef uint16_t u16;
 typedef uint8_t  u8;
+#endif
 
 typedef const uint32_t uc32;  /*!< Read Only */
 typedef const uint16_t uc16;  /*!< Read Only */
