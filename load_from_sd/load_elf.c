@@ -88,6 +88,7 @@ void print_packet(u8 *packet, u32 len);
 int main(int argc, char *argv[])
 {
   u32 total,free;
+  u8 *elf_code = 0;
 
   exfuns_init(); // 配置 fatfs 相關變數所使用的記憶體
   if (FR_INVALID_DRIVE == f_mount(fs[2],"2:",1)) 
@@ -141,6 +142,23 @@ int main(int argc, char *argv[])
     }
     Elf32Phdr elf_pheader = *((Elf32Phdr*)((u8 *)buf + elf_header.e_phoff)); // program header
     printf("elf_header.e_phnum: %d\n", elf_header.e_phnum);
+    for (int i=0 ; i < elf_header.e_phnum; ++i)
+    {
+      int ret;
+      printf("p_vaddr: %#x offset: %#x size: %d\n", elf_pheader.p_vaddr, elf_pheader.p_offset, elf_pheader.p_filesz);
+      ret = f_lseek(&fil, elf_pheader.p_offset);
+      if (elf_pheader.p_filesz > BUF_SIZE)
+      {
+        printf("can not read: elf_pheader.p_filesz > BUF_SIZE\n");
+      }
+      else
+      {
+        f_read(&fil, buf, elf_pheader.p_filesz, &r_len);
+        printf("yy r_len: %d\n", r_len);
+        print_packet(buf, r_len);
+        s32_memcpy(elf_pheader.p_vaddr, buf, r_len);
+      }
+    }
     break;
 
     // printf(line);
