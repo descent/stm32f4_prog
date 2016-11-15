@@ -1,4 +1,5 @@
-CFLAGS=-g
+include ../../rule.mk
+#CFLAGS=-g -m32
 all: exfuns.o  fattester.o
 
 %.o: %.c

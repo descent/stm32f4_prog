@@ -1,7 +1,9 @@
+include ../../../rule.mk
+#CFLAGS=-g -m32
 all: cc936.o  syscall.o  unicode.o
 
 %.o: %.c
-	$(CC) -I../../ -I../../../inc/ -I../src -c $<
+	$(CC) $(CFLAGS) -I../../ -I../../../../inc/ -I../src -c $<
 
 
 clean:

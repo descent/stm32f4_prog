@@ -1,7 +1,9 @@
+include ../../rule.mk
+#CFLAGS=-g -m32
 all: diskio.o  ff.o
 
 %.o: %.c
-	$(CC) -I../../ -I../../../inc/ -I../src -c $<
+	$(CC) $(CFLAGS) -I../../ -I../../../inc/ -I../src -c $<
 
 
 clean:
