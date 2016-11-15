@@ -1,9 +1,5 @@
 #include "mmc_sd.h"			   
 
-#ifndef STM32F407
-#include <stdint.h>
-#include <stdio.h>
-#endif
 
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供學習使用，未經作者許可，不得用於其它任何用途
@@ -391,14 +387,13 @@ u8 SD_Initialize(void)
 }
 
 #ifndef STM32F407
-extern FILE *fs;
-u8 disk_image_read(u8*buf,u32 sector,u8 cnt)
+u8 disk_image_read(u8*buf,u32 sector,u8 cnt, FILE *fst)
 {
   u32 read_len = cnt * 512;
   u32 rlen = 0;
   printf("read_len: %d\n", read_len);
-  fseek(fs, sector * 512 , SEEK_SET);
-  rlen = fread(buf, 1, read_len, fs);
+  fseek(fst, sector * 512 , SEEK_SET);
+  rlen = fread(buf, 1, read_len, fst);
   printf("rlen: %d\n", rlen);
   //print_packet(buf, 512);
   return 0;

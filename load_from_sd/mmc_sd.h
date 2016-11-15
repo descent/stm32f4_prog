@@ -6,6 +6,11 @@
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_spi.h"
 #include "stm32f4xx_gpio.h"
+
+#else
+
+#include <stdint.h>
+#include <stdio.h>
 #endif
 
 #include "type.h"
@@ -90,7 +95,7 @@ u8 SD_GetCID(u8 *cid_data);                     //讀SD卡CID
 u8 SD_GetCSD(u8 *csd_data);                     //讀SD卡CSD
 
 #ifndef STM32F407
-u8 disk_image_read(u8*buf,u32 sector,u8 cnt);
+u8 disk_image_read(u8*buf,u32 sector,u8 cnt, FILE *fst);
 #endif
  
 #endif
