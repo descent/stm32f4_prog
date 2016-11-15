@@ -29,7 +29,8 @@ void print_packet(u8 *packet, u32 len)
   printf("\n");
 }
 
-#define BUF_SIZE 640*1024
+#if 0
+//#define BUF_SIZE 640*1024
 #define LOAD_SIZE 64*1024
 u8 buf[BUF_SIZE];
 int load_elf()
@@ -77,10 +78,13 @@ int load_elf()
     //++elf_pheader;
   }
 }
+#endif
 
-
-
+#define BUF_SIZE 256
 #ifdef TEST_MAIN
+
+void print_packet(u8 *packet, u32 len);
+
 int main(int argc, char *argv[])
 {
   u32 total,free;
@@ -101,21 +105,52 @@ int main(int argc, char *argv[])
 
 
   FIL fil;       /* File object */
-  char line[82]; /* Line buffer */
+  char buf[BUF_SIZE]; /* Line buffer */
   FRESULT fr;    /* FatFs return code */
   //fr = f_open(&fil, "1.txt", FA_READ);
-  fr = f_open(&fil, "2:\\1.txt", FA_READ);
-  if (fr) return (int)fr;
+  const char *fn = "2:/MYUR_1~1.ELF";
+  fr = f_open(&fil, fn, FA_READ);
+  if (fr) 
+  {
+    printf("open %s fail\n", fn);
+    return (int)fr;
+  }
 
+  TCHAR* pos=0;
+  DWORD fsize = f_size (&fil);
+  printf("fsize: %d\n", fsize);
+  int r_len = 0;
+  while (1)
+  {
+    f_read(&fil, buf, BUF_SIZE, &r_len);
+    printf("r_len: %d\n", r_len);
+    fsize -= BUF_SIZE;
+    if (fsize < BUF_SIZE)
+      print_packet(buf, fsize);
+    else
+      print_packet(buf, BUF_SIZE);
 
-    /* Read all lines and display it */
-    while (f_gets(line, sizeof line, &fil))
-        printf(line);
+    Elf32Ehdr elf_header = *((Elf32Ehdr*)buf);
+    printf("sizeof Elf32Ehdr: %d\n", sizeof(Elf32Ehdr));
+    printf("sizeof Elf32Phdr: %d\n", sizeof(Elf32Phdr));
+    printf("elf_header.e_phoff: %d\n",  elf_header.e_phoff);
+    if (elf_header.e_phoff > BUF_SIZE)
+    {
+      printf("error elf_header.e_phoff > BUF_SIZE!!\n");
+      break;
+    }
+    Elf32Phdr elf_pheader = *((Elf32Phdr*)((u8 *)buf + elf_header.e_phoff)); // program header
+    printf("elf_header.e_phnum: %d\n", elf_header.e_phnum);
+    break;
 
-    /* Close the file */
-    f_close(&fil);
+    // printf(line);
+  }
+
+  /* Close the file */
+  f_close(&fil);
 #endif
 
+#ifdef TEST_DIR
   DIR dir;
   static FILINFO f_info; // why need static, if no static, f_readdir will get segment fault
   FRESULT ret;
@@ -148,7 +183,7 @@ int main(int argc, char *argv[])
     #endif
     f_closedir(&dir);
   }
-
+#endif
 #if 0
   FILE *fs;
   fs = fopen("/home/descent/git/jserv-course/stm32f4_prog/load_from_sd/loaded_prog/myur_168M.elf", "r");
