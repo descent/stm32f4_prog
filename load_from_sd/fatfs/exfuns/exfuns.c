@@ -31,7 +31,7 @@ const u8 *FILE_TYPE_TBL[6][13]=
 {"BMP","JPG","JPEG","GIF"},//圖片檔案
 };
 ///////////////////////////////公共檔案區,使用malloc的時候////////////////////////////////////////////
-FATFS *fs[2];  		//邏輯磁碟工作區.	 
+FATFS *fs[_VOLUMES];  		//邏輯磁碟工作區.	 
 FIL *file;	  		//檔案1
 FIL *ftemp;	  		//檔案2.
 UINT br,bw;			//讀寫變數
@@ -45,11 +45,20 @@ u8 *fatbuf;			//SD卡數據緩存區
 //1,失敗
 u8 exfuns_init(void)
 {
-	fs[0]=(FATFS*)mymalloc(sizeof(FATFS));	//為磁碟0工作區申請內存	
-	fs[1]=(FATFS*)mymalloc(sizeof(FATFS));	//為磁碟1工作區申請內存
+  static FATFS fs_pool[_VOLUMES];
+
+  for (int i=0 ; i < _VOLUMES ; ++i)
+  {
+    //fs[i]=(FATFS*)mymalloc(sizeof(FATFS));
+    fs[i] = &fs_pool[i];
+    printf("%d fs[i]: %p\n", i, fs[i]);
+  }
+
+	//fs[0]=(FATFS*)mymalloc(sizeof(FATFS));	//為磁碟0工作區申請內存	
+	//fs[1]=(FATFS*)mymalloc(sizeof(FATFS));	//為磁碟1工作區申請內存
 	file=(FIL*)mymalloc(sizeof(FIL));		//為file申請內存
 	ftemp=(FIL*)mymalloc(sizeof(FIL));		//為ftemp申請內存
-	fatbuf=(u8*)mymalloc(512);				//為fatbuf申請內存
+	fatbuf=(u8*)mymalloc(512);		        //為fatbuf申請內存
 	if(fs[0]&&fs[1]&&file&&ftemp&&fatbuf)return 0;  //申請有一個失敗,即失敗.
 	else return 1;	
 }
