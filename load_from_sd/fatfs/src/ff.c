@@ -789,7 +789,6 @@ FRESULT move_window (
 {
   //printf("fs->winsect: %x, sector: %x\n", fs->winsect, sector);
 	if (sector != fs->winsect) {	/* Changed current window */
-          printf("xx\n");
 #if !_FS_READONLY
 		if (sync_window(fs) != FR_OK)
 			return FR_DISK_ERR;
@@ -2276,7 +2275,9 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 	if (nclst >= MIN_FAT32) fmt = FS_FAT32;
 
         static char *fat_str[] = {"", "fat12", "fat16", "fat32"};
+#ifndef STM32F407
         printf("fat type: %s\n", fat_str[fmt]);
+#endif
 
 
 	/* Boundaries and Limits */
