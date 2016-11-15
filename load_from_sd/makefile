@@ -20,7 +20,14 @@ mmc_sd.o: mmc_sd.c mmc_sd.h
 
 stm32f4xx_spi.o: stm32f4xx_spi.c
 	arm-none-eabi-gcc $(CFLAGS) $(INC) -c $< 
-load_elf: load_elf.c
-	gcc -I../inc -DTEST_MAIN -o $@ $<
+load_elf: load_elf.c fatfs/libfat.a mmc_sd.x86.o
+	gcc -g -Ifatfs/src -I../inc -DTEST_MAIN -o $@ $^
+fatfs/libfat.a:
+	(cd fatfs ; make)
+
+mmc_sd.x86.o: mmc_sd.c mmc_sd.h
+	gcc -I../inc -c -o mmc_sd.x86.o mmc_sd.c 
+
+
 clean:
 	rm -rf *.o *.bin *.elf
