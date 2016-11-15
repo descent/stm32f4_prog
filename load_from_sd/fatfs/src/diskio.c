@@ -105,6 +105,7 @@ DSTATUS disk_initialize (
                 case FILE_IMAGE_02:
                 {
 #ifndef STM32F407
+  printf("FILE_IMAGE_02\n");
   const char *fn = "fat12.img";
 
   if (fs2 == 0 )
