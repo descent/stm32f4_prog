@@ -45,20 +45,21 @@
 u16	    FLASH_SECTOR_COUNT= 9832;	//4.8M位元組,預設為W25Q64
 #define FLASH_BLOCK_SIZE   	8     	//每個BLOCK有8個扇區
 
+#ifndef STM32F407
 FILE *fs_01=0;
 FILE *fs2=0;
+#endif
 
 //初始化磁碟
 DSTATUS disk_initialize (
 	BYTE pdrv				/* Physical drive nmuber (0..) */
 )
 {
-  printf("yyy");
 	u8 res=0;	    
 	switch(pdrv)
 	{
 		case SD_CARD://SD卡
-                  printf("init sd card\n");
+                  //printf("init sd card\n");
 #ifdef STM32F407
 			res = SD_Initialize();//SD_Initialize() 
 		 	if(res)//STM32 SPI的bug,在sd卡操作失敗的時候如果不執行下面的語句,可能導致SPI讀寫異常
@@ -184,17 +185,21 @@ DRESULT disk_read (
                 #endif
                 case FILE_IMAGE_01:
                 {
+#ifndef STM32F407
                         printf("call disk_image_read()\n");
                         disk_image_read(buff, sector, count, fs_01);
                         printf("call disk_image_read() ok\n");
+#endif
                         return RES_OK;	 
                   break;
                 }
                 case FILE_IMAGE_02:
                 {
+#ifndef STM32F407
                         printf("call disk_image_read()\n");
                         disk_image_read(buff, sector, count, fs2);
                         printf("call disk_image_read() ok\n");
+#endif
                         return RES_OK;	 
                   break;
                 }
