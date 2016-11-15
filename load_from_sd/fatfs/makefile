@@ -1,3 +1,4 @@
+include ../rule.mk
 libfat_objs =  ./exfuns/fattester.o ./exfuns/exfuns.o  ./src/diskio.o ./src/ff.o src/option/cc936.o  src/option/syscall.o  src/option/unicode.o 
 
 libfat.a: $(libfat_objs)
