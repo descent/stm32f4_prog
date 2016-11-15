@@ -132,7 +132,7 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
-#define _VOLUMES	2
+#define _VOLUMES	5
 /* Number of volumes (logical drives) to be used. */
 
 
