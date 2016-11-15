@@ -122,13 +122,18 @@ u8 mf_readdir(void)
 	u8 res;
 	char *fn;			 
 #if _USE_LFN
- 	fileinfo.lfsize = _MAX_LFN * 2 + 1;
-	fileinfo.lfname = mymalloc(fileinfo.lfsize);
+  TCHAR long_name_pool[_MAX_LFN * 2 + 1];
+
+  fileinfo.lfsize = _MAX_LFN * 2 + 1;
+  fileinfo.lfname = long_name_pool;
+
+  //fileinfo.lfsize = _MAX_LFN * 2 + 1;
+  //fileinfo.lfname = mymalloc(fileinfo.lfsize);
 #endif		  
 	res=f_readdir(&dir,&fileinfo);//讀取一個檔案的信息
 	if(res!=FR_OK||fileinfo.fname[0]==0)
 	{
-		myfree(fileinfo.lfname);
+		//myfree(fileinfo.lfname);
 		return res;//讀完了.
 	}
 #if _USE_LFN
@@ -151,7 +156,7 @@ u8 mf_readdir(void)
 	printf("File time is:%d\r\n",fileinfo.ftime);
 	printf("File Attr is:%d\r\n",fileinfo.fattrib);
 	printf("\r\n");
-	myfree(fileinfo.lfname);
+	//myfree(fileinfo.lfname);
 	return 0;
 }			 
 
@@ -163,8 +168,12 @@ u8 mf_scan_files(u8 * path)
 	FRESULT res;	  
     char *fn;   /* This function is assuming non-Unicode cfg. */
 #if _USE_LFN
- 	fileinfo.lfsize = _MAX_LFN * 2 + 1;
-	fileinfo.lfname = mymalloc(fileinfo.lfsize);
+  TCHAR long_name_pool[_MAX_LFN * 2 + 1];
+
+  fileinfo.lfsize = _MAX_LFN * 2 + 1;
+  fileinfo.lfname = long_name_pool;
+ 	//fileinfo.lfsize = _MAX_LFN * 2 + 1;
+	//fileinfo.lfname = mymalloc(fileinfo.lfsize);
 #endif		  
 
     res = f_opendir(&dir,(const TCHAR*)path); //打開一個目錄
@@ -185,7 +194,7 @@ u8 mf_scan_files(u8 * path)
 			printf("%s\r\n",  fn);//打印檔案名	  
 		} 
     }	  
-	myfree(fileinfo.lfname);
+	//myfree(fileinfo.lfname);
     return res;	  
 }
 //顯示剩餘容量
