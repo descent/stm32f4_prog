@@ -73,6 +73,8 @@ u8 exfuns_init(void)
 	//else return 1;	
 }
 
+
+#if 0
 //將小寫字母轉為大寫字母,如果是數字,則保持不變.
 u8 char_upper(u8 c)
 {
@@ -121,6 +123,7 @@ u8 f_typetell(u8 *fname)
 	}
 	return 0XFF;//沒找到		 			   
 }	 
+#endif
 
 //得到磁碟剩餘容量
 //drv:磁碟編號("0:"/"1:")
