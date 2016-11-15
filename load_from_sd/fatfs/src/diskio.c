@@ -36,6 +36,8 @@
 
 #define SD_CARD	 0  //SD卡,卷標為0
 #define EX_FLASH 1	//外部flash,卷標為1
+#define FILE_IMAGE_01 2
+#define FILE_IMAGE_02 3
 
 #define FLASH_SECTOR_SIZE 	512			  
 //對於W25Q64 
@@ -43,26 +45,15 @@
 u16	    FLASH_SECTOR_COUNT= 9832;	//4.8M位元組,預設為W25Q64
 #define FLASH_BLOCK_SIZE   	8     	//每個BLOCK有8個扇區
 
+FILE *fs_01=0;
+FILE *fs2=0;
 
 //初始化磁碟
 DSTATUS disk_initialize (
 	BYTE pdrv				/* Physical drive nmuber (0..) */
 )
 {
-#ifndef STM32F407
-  extern FILE *fs;
-  const char *fn = "fat32.img";
-
-  fs = fopen(fn, "r");
-  if (fs == NULL)
-  {
-    perror("open imagefile.img error\n");
-    exit(1);
-  }
-  printf("open %s ok\n", fn);
-
-  return 0;
-#endif
+  printf("yyy");
 	u8 res=0;	    
 	switch(pdrv)
 	{
@@ -85,6 +76,55 @@ DSTATUS disk_initialize (
 			else FLASH_SECTOR_COUNT=0;							//其他
  			break;
 #endif
+                case FILE_IMAGE_01:
+		//case EX_FLASH://外部flash
+                {
+#ifndef STM32F407
+  printf("FILE_IMAGE_01\n");
+  const char *fn = "fat32.img";
+
+  if (fs_01 == 0 )
+  {
+    fs_01 = fopen(fn, "r");
+    if (fs_01 == NULL)
+    {
+      perror("open imagefile.img error\n");
+      exit(1);
+    }
+    printf("the 1st open %s ok\n", fn);
+  }
+  else
+  {
+    printf("already open %s ok\n", fn);
+  }
+
+  return 0;
+#endif
+                  break;
+                }
+                case FILE_IMAGE_02:
+                {
+#ifndef STM32F407
+  const char *fn = "fat12.img";
+
+  if (fs2 == 0 )
+  {
+  fs2 = fopen(fn, "r");
+  if (fs2 == NULL)
+  {
+    perror("open fat12.img error\n");
+    exit(1);
+  }
+  printf("open %s ok\n", fn);
+  }
+  else
+  {
+    printf("%s already open\n", fn);
+  }
+
+  return 0;
+#endif
+                }
 		default:
 			res=1; 
 	}		 
@@ -126,9 +166,6 @@ DRESULT disk_read (
 				SD_SPI_SpeedHigh();
 			}
                         #else
-                        printf("call disk_image_read()\n");
-                        disk_image_read(buff, sector, count);
-                        return RES_OK;	 
                         #endif
 
 
@@ -144,6 +181,22 @@ DRESULT disk_read (
 			res=0;
 			break;
                 #endif
+                case FILE_IMAGE_01:
+                {
+                        printf("call disk_image_read()\n");
+                        disk_image_read(buff, sector, count, fs_01);
+                        printf("call disk_image_read() ok\n");
+                        return RES_OK;	 
+                  break;
+                }
+                case FILE_IMAGE_02:
+                {
+                        printf("call disk_image_read()\n");
+                        disk_image_read(buff, sector, count, fs2);
+                        printf("call disk_image_read() ok\n");
+                        return RES_OK;	 
+                  break;
+                }
 		default:
 			res=1; 
 	}
