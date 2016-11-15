@@ -2,7 +2,7 @@
 #include <string.h>
 #include "exfuns.h"
 #include "fattester.h"	
-#include <stdlib.h>
+//#include <stdlib.h>
 //#include "malloc.h"
 //#include "usart.h"
 //////////////////////////////////////////////////////////////////////////////////	 
@@ -18,7 +18,7 @@
 //All rights reserved									  
 //////////////////////////////////////////////////////////////////////////////////
 
-#define mymalloc malloc
+//#define mymalloc malloc
 
  //檔案類型列表
 const u8 *FILE_TYPE_TBL[6][13]=
@@ -38,6 +38,8 @@ UINT br,bw;			//讀寫變數
 FILINFO fileinfo;	//檔案信息
 DIR dir;  			//目錄
 
+#define FIL_POOL_SIZE 5
+
 u8 *fatbuf;			//SD卡數據緩存區
 ///////////////////////////////////////////////////////////////////////////////////////
 //為exfuns申請內存
@@ -46,6 +48,8 @@ u8 *fatbuf;			//SD卡數據緩存區
 u8 exfuns_init(void)
 {
   static FATFS fs_pool[_VOLUMES];
+  static FIL fil_pool[FIL_POOL_SIZE];
+  static u8 fat_buf_poll[512];
 
   for (int i=0 ; i < _VOLUMES ; ++i)
   {
@@ -53,14 +57,20 @@ u8 exfuns_init(void)
     fs[i] = &fs_pool[i];
     printf("%d fs[i]: %p\n", i, fs[i]);
   }
+  file = &fil_pool[0];		//為file申請內存
+  ftemp = &fil_pool[1];		//為ftemp申請內存
+  fatbuf = fat_buf_poll;		        //為fatbuf申請內存
+  return 0;
 
 	//fs[0]=(FATFS*)mymalloc(sizeof(FATFS));	//為磁碟0工作區申請內存	
 	//fs[1]=(FATFS*)mymalloc(sizeof(FATFS));	//為磁碟1工作區申請內存
-	file=(FIL*)mymalloc(sizeof(FIL));		//為file申請內存
-	ftemp=(FIL*)mymalloc(sizeof(FIL));		//為ftemp申請內存
-	fatbuf=(u8*)mymalloc(512);		        //為fatbuf申請內存
-	if(fs[0]&&fs[1]&&file&&ftemp&&fatbuf)return 0;  //申請有一個失敗,即失敗.
-	else return 1;	
+	//file=(FIL*)mymalloc(sizeof(FIL));		//為file申請內存
+	//ftemp=(FIL*)mymalloc(sizeof(FIL));		//為ftemp申請內存
+
+
+	//fatbuf = (u8*)mymalloc(512);		        //為fatbuf申請內存
+	//if(fs[0]&&fs[1]&&file&&ftemp&&fatbuf)return 0;  //申請有一個失敗,即失敗.
+	//else return 1;	
 }
 
 //將小寫字母轉為大寫字母,如果是數字,則保持不變.
