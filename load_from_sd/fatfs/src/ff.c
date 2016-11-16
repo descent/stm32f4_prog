@@ -536,14 +536,14 @@ WCHAR LfnBuf[_MAX_LFN+1];
 #define	FREE_BUF()			ff_memfree(lfn)
 #endif
 
-#define BUF_POOL_SIZE 512
+#define BUF_POOL_SIZE 8
 u32 buf_pool_index = 0;
 #define INIT_BUF(dobj)		{  \
-                                  static u8 buf_pool[(_MAX_LFN + 1) * 2][BUF_POOL_SIZE]; \
+                                  static u8 buf_pool[BUF_POOL_SIZE][(_MAX_LFN + 1) * 2]; \
                                                                                         \
                                   if (buf_pool_index >= BUF_POOL_SIZE)                  \
                                   {  \
-                                    printf("cannot alloc memory\n");  \
+                                    /* printf("cannot alloc memory\n");  */ \
 				    LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE);  \
                                   } \
                                     \
@@ -2244,6 +2244,9 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 	/* Find an FAT partition on the drive. Supports only generic partitioning, FDISK and SFD. */
 	bsect = 0;
 	fmt = check_fs(fs, bsect);					/* Load sector 0 and check if it is an FAT boot sector as SFD */
+#ifndef STM32F407
+        printf("fmt: %d\n", fmt);
+#endif
 	if (fmt == 1 || (!fmt && (LD2PT(vol)))) {	/* Not an FAT boot sector or forced partition number */
 		UINT i;
 		DWORD br[4];
@@ -2256,6 +2259,9 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 		if (i) i--;
 		do {								/* Find an FAT volume */
 			bsect = br[i];
+#ifndef STM32F407
+                        printf("fat begin sector: %d\n", bsect);
+#endif
 			fmt = bsect ? check_fs(fs, bsect) : 2;	/* Check the partition */
 		} while (!LD2PT(vol) && fmt && ++i < 4);
 	}
