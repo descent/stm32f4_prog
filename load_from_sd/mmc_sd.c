@@ -387,11 +387,12 @@ u8 SD_Initialize(void)
 }
 
 #ifndef STM32F407
-u8 disk_image_read(u8*buf,u32 sector,u8 cnt, FILE *fst)
+u8 disk_image_read(u8 *buf, u32 sector, u8 cnt, FILE *fst)
 {
   u32 read_len = cnt * 512;
   u32 rlen = 0;
-  printf("read_len: %d\n", read_len);
+  printf("read sector: %d, read_len: %d\n", sector, read_len);
+
   fseek(fst, sector * 512 , SEEK_SET);
   rlen = fread(buf, 1, read_len, fst);
   printf("rlen: %d\n", rlen);
