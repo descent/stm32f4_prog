@@ -18,9 +18,6 @@
 #include <stdio.h>
 #endif
 
-#define mymalloc malloc
-#define myfree free
-
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供學習使用，未經作者許可，不得用於其它任何用途
 //ALIENTEK STM32開發板
@@ -82,7 +79,8 @@ DSTATUS disk_initialize (
                 {
 #ifndef STM32F407
   printf("FILE_IMAGE_01\n");
-  const char *fn = "fat32.img";
+  //const char *fn = "fat32.img";
+  const char *fn = "c.img";
 
   if (fs_01 == 0 )
   {
@@ -331,13 +329,16 @@ DWORD get_fattime (void)
 {				 
 	return 0;
 }			 
+
+#if 0
 //動態分配內存
 void *ff_memalloc (UINT size)			
 {
-	//return (void*)mymalloc(size);
+	return (void*)mymalloc(size);
 }
 //釋放內存
 void ff_memfree (void* mf)		 
 {
-	//myfree(mf);
+	myfree(mf);
 }
+#endif
