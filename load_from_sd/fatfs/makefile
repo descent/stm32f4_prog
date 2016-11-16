@@ -1,7 +1,12 @@
 include ../rule.mk
 libfat_objs =  ./exfuns/fattester.o ./exfuns/exfuns.o  ./src/diskio.o ./src/ff.o src/option/cc936.o  src/option/syscall.o  src/option/unicode.o 
 
-libfat.a: $(libfat_objs)
+TARGET=libfat.a
+ifeq ($(ARCH), cm3) 
+TARGET=libfat.cm3.a
+else
+endif
+$(TARGET): $(libfat_objs)
 	$(AR) rcs -o $@ $(libfat_objs)
 exfuns/fattester.o:
 	(cd exfuns; make fattester.o)
