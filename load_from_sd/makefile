@@ -8,7 +8,7 @@ all: load_elf
 spi_sdcard.bin: spi_sdcard.elf
 	arm-none-eabi-objcopy -Obinary $< $@
 
-spi_sdcard.elf: spi_sdcard.o stm32f4xx_spi.o mmc_sd.o fatfs/libfat.a
+spi_sdcard.elf: spi_sdcard.o stm32f4xx_spi.o mmc_sd.o fatfs/libfat.cm3.a
 	arm-none-eabi-gcc $(MYCFLAGS) -o $@ $^
 
 spi_sdcard.o: spi_sdcard.c
