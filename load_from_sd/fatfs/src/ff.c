@@ -529,10 +529,35 @@ WCHAR LfnBuf[_MAX_LFN+1];
 
 #elif _USE_LFN == 3 		/* LFN feature with dynamic working buffer on the heap */
 #define	DEF_NAMEBUF			BYTE sfn[12]; WCHAR *lfn
+#if 0
 #define INIT_BUF(dobj)		{ lfn = ff_memalloc((_MAX_LFN + 1) * 2); \
 							  if (!lfn) LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE); \
 							  (dobj).lfn = lfn;	(dobj).fn = sfn; }
 #define	FREE_BUF()			ff_memfree(lfn)
+#endif
+
+#define BUF_POOL_SIZE 512
+u32 buf_pool_index = 0;
+#define INIT_BUF(dobj)		{  \
+                                  static u8 buf_pool[(_MAX_LFN + 1) * 2][BUF_POOL_SIZE]; \
+                                                                                        \
+                                  if (buf_pool_index >= BUF_POOL_SIZE)                  \
+                                  {  \
+                                    printf("cannot alloc memory\n");  \
+				    LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE);  \
+                                  } \
+                                    \
+                                  lfn = &buf_pool[buf_pool_index]; \
+                                  ++buf_pool_index; \
+                                  /* printf("alloc buf_pool_index: %d\n", buf_pool_index); */ \
+                                  (dobj).lfn = lfn;	\
+                                  (dobj).fn = sfn;  \
+                                }
+#define	FREE_BUF()	        { \
+                                  if (buf_pool_index > 0 ) \
+                                    --buf_pool_index; \
+                                    /* printf("free buf_pool_index: %d\n", buf_pool_index); */ \
+                                }
 
 #else
 #error Wrong LFN configuration.
