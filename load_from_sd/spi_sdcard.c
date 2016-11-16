@@ -7,6 +7,7 @@
 #include "stm32f4xx_gpio.h"
 
 #include "fatfs/exfuns/exfuns.h"
+#include "elf.h"
 
 #define SET_CPU_CLOCK
 
@@ -767,6 +768,13 @@ char* s32_itoa(uint32_t n, char* str, int radix)
   return str;
 }
 
+#define BUF_SIZE 256
+
+void s32_memcpy(u8 *dest, const u8 *src, u32 n)
+{
+  for (int i=0; i < n ; ++i)
+    *dest++ = *src++;
+}
 /**
  * @brief  Main program.
  * @param  None
@@ -889,15 +897,92 @@ int main(void)
   }
   //printf("total: %d, free: %d\n", total, free);
 
-  ur_puts(USART2, "total: ");
-  s32_itoa(total, str, 16);
+  ur_puts(USART2, "\r\ntotal: ");
+  s32_itoa(total, str, 10);
   ur_puts(USART2, str);
 
   ur_puts(USART2, ", free: ");
-  s32_itoa(free, str, 16);
+  s32_itoa(free, str, 10);
   ur_puts(USART2, str);
   ur_puts(USART2, "\r\n");
 
+#if 1
+{
+  u8 *elf_code = 0;
+
+  FIL fil;       /* File object */
+  char buf[BUF_SIZE]; /* Line buffer */
+  FRESULT fr;    /* FatFs return code */
+  //fr = f_open(&fil, "1.txt", FA_READ);
+  //const char *fn = "2:/MYUR_1~1.ELF";
+  const char *fn = "0:/myur_168M.elf";
+  fr = f_open(&fil, fn, FA_READ);
+  if (fr) 
+  {
+    //printf("open %s fail\n", fn);
+    return (int)fr;
+  }
+
+  TCHAR* pos=0;
+  DWORD fsize = f_size (&fil);
+  //printf("fsize: %d\n", fsize);
+  int r_len = 0;
+  while (1)
+  {
+    f_read(&fil, buf, BUF_SIZE, &r_len);
+    //printf("r_len: %d\n", r_len);
+    fsize -= BUF_SIZE;
+#if 0
+    if (fsize < BUF_SIZE)
+      print_packet(buf, fsize);
+    else
+      print_packet(buf, BUF_SIZE);
+#endif
+    Elf32Ehdr elf_header = *((Elf32Ehdr*)buf);
+    #if 0
+    printf("sizeof Elf32Ehdr: %d\n", sizeof(Elf32Ehdr));
+    printf("sizeof Elf32Phdr: %d\n", sizeof(Elf32Phdr));
+    printf("elf_header.e_phoff: %d\n",  elf_header.e_phoff);
+    #endif
+    u32 entry = elf_header.e_entry; 
+    if (elf_header.e_phoff > BUF_SIZE)
+    {
+      //printf("error elf_header.e_phoff > BUF_SIZE!!\n");
+      break;
+    }
+    Elf32Phdr elf_pheader = *((Elf32Phdr*)((u8 *)buf + elf_header.e_phoff)); // program header
+    //printf("elf_header.e_phnum: %d\n", elf_header.e_phnum);
+    for (int i=0 ; i < elf_header.e_phnum; ++i)
+    {
+      int ret;
+      //printf("p_vaddr: %#x offset: %#x size: %d\n", elf_pheader.p_vaddr, elf_pheader.p_offset, elf_pheader.p_filesz);
+      ret = f_lseek(&fil, elf_pheader.p_offset);
+      if (elf_pheader.p_filesz > BUF_SIZE)
+      {
+        //printf("can not read: elf_pheader.p_filesz > BUF_SIZE\n");
+      }
+      else
+      {
+        f_read(&fil, buf, elf_pheader.p_filesz, &r_len);
+        //printf("yy r_len: %d\n", r_len);
+        //print_packet(buf, r_len);
+        #if 1
+        s32_memcpy(elf_pheader.p_vaddr, buf, r_len);
+        (*(void(*)())entry)();
+        ur_puts(USART2, "back\r\n");
+        while(1);
+        #endif
+      }
+    }
+    break;
+
+    // printf(line);
+  }
+
+  /* Close the file */
+  f_close(&fil);
+}
+#endif
 
 #if 0
 
