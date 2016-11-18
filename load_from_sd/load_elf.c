@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define TEST_DIR
+//#define TEST_DIR
 
 void s32_memcpy(u8 *dest, const u8 *src, u32 n)
 {
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
   FRESULT fr;    /* FatFs return code */
   //fr = f_open(&fil, "1.txt", FA_READ);
   //const char *fn = "2:/MYUR_1~1.ELF";
-  const char *fn = "2:/myur_168M.elf";
+  const char *fn = "2:/myur_168M-data-bss.elf";
   fr = f_open(&fil, fn, FA_READ);
   if (fr) 
   {
@@ -149,9 +149,52 @@ int main(int argc, char *argv[])
       int ret;
       printf("p_vaddr: %#x offset: %#x size: %d\n", elf_pheader.p_vaddr, elf_pheader.p_offset, elf_pheader.p_filesz);
       ret = f_lseek(&fil, elf_pheader.p_offset);
+
+#if 1
+      u32 read_times =  1;
       if (elf_pheader.p_filesz > BUF_SIZE)
       {
-        printf("can not read: elf_pheader.p_filesz > BUF_SIZE\n");
+        printf("elf_pheader.p_filesz: %d\n", elf_pheader.p_filesz);
+        printf("BUF_SIZE: %d\n", BUF_SIZE);
+        printf("elf_pheader.p_filesz > BUF_SIZE need to read %d times.\n", read_times);
+        read_times = elf_pheader.p_filesz/BUF_SIZE;
+        if ( elf_pheader.p_filesz % BUF_SIZE != 0)
+          ++read_times;
+      }
+
+        for (int i=0 ; i < read_times; ++i)
+        {
+          u32 read_len = BUF_SIZE;
+          if (i == (read_times-1))
+          {
+            read_len = elf_pheader.p_filesz - i * BUF_SIZE;
+          }
+          f_read(&fil, buf, read_len, &r_len);
+          printf("yy r_len: %d\n", r_len);
+          print_packet(buf, r_len);
+        }
+
+#if 0
+      if (elf_pheader.p_filesz > BUF_SIZE)
+      {
+        u32 read_times =  elf_pheader.p_filesz/BUF_SIZE;
+        if ( elf_pheader.p_filesz % BUF_SIZE != 0)
+          ++read_times;
+
+        printf("elf_pheader.p_filesz: %d\n", elf_pheader.p_filesz);
+        printf("BUF_SIZE: %d\n", BUF_SIZE);
+        printf("elf_pheader.p_filesz > BUF_SIZE need to read %d times.\n", read_times);
+        for (int i=0 ; i < read_times; ++i)
+        {
+          u32 read_len = BUF_SIZE;
+          if (i == (read_times-1))
+          {
+            read_len = elf_pheader.p_filesz - i * BUF_SIZE;
+          }
+          f_read(&fil, buf, read_len, &r_len);
+          printf("yy r_len: %d\n", r_len);
+          print_packet(buf, r_len);
+        }
       }
       else
       {
@@ -163,6 +206,8 @@ int main(int argc, char *argv[])
         (*(void(*)())elf_code)();
         #endif
       }
+#endif
+#endif
     }
     break;
 
