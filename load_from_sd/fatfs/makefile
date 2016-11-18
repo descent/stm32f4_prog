@@ -19,6 +19,8 @@ src/ff.o:
 
 src/option/cc936.o:
 	(cd src/option; make cc936.o)
+src/option/cc950.o:
+	(cd src/option; make cc950.o)
 src/option/syscall.o:
 	(cd src/option; make syscall.o)
 src/option/unicode.o:
