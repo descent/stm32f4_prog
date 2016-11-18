@@ -957,6 +957,37 @@ int main(void)
       int ret;
       //printf("p_vaddr: %#x offset: %#x size: %d\n", elf_pheader.p_vaddr, elf_pheader.p_offset, elf_pheader.p_filesz);
       ret = f_lseek(&fil, elf_pheader.p_offset);
+
+      u32 read_times =  1;
+      if (elf_pheader.p_filesz > BUF_SIZE)
+      {
+      #if 0
+        printf("elf_pheader.p_filesz: %d\n", elf_pheader.p_filesz);
+        printf("BUF_SIZE: %d\n", BUF_SIZE);
+        printf("elf_pheader.p_filesz > BUF_SIZE need to read %d times.\n", read_times);
+      #endif
+        read_times = elf_pheader.p_filesz/BUF_SIZE;
+        if ( elf_pheader.p_filesz % BUF_SIZE != 0)
+          ++read_times;
+      }
+
+      for (int i=0 ; i < read_times; ++i)
+      {
+        u32 read_len = BUF_SIZE;
+        if (i == (read_times-1))
+        {
+          read_len = elf_pheader.p_filesz - i * BUF_SIZE;
+        }
+        f_read(&fil, buf, read_len, &r_len);
+        s32_memcpy(elf_pheader.p_vaddr + read_len * i, buf, r_len);
+        (*(void(*)())entry)();
+        ur_puts(USART2, "back to loader\r\n");
+        while(1);
+        //printf("yy r_len: %d\n", r_len);
+        //print_packet(buf, r_len);
+      }
+
+#if 0
       if (elf_pheader.p_filesz > BUF_SIZE)
       {
         //printf("can not read: elf_pheader.p_filesz > BUF_SIZE\n");
@@ -973,6 +1004,7 @@ int main(void)
         while(1);
         #endif
       }
+#endif
     }
     break;
 
