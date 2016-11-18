@@ -775,6 +775,14 @@ void s32_memcpy(u8 *dest, const u8 *src, u32 n)
   for (int i=0; i < n ; ++i)
     *dest++ = *src++;
 }
+
+void print_u32(u32 val)
+{
+  char str[20];
+
+  s32_itoa(val, str, 10);
+  ur_puts(USART2, str);
+}
 /**
  * @brief  Main program.
  * @param  None
@@ -915,7 +923,8 @@ int main(void)
   FRESULT fr;    /* FatFs return code */
   //fr = f_open(&fil, "1.txt", FA_READ);
   //const char *fn = "2:/MYUR_1~1.ELF";
-  const char *fn = "0:/myur_168M.elf";
+  //const char *fn = "0:/myur_168M.elf";
+  const char *fn = "0:/myur_168M-data-bss.elf";
   fr = f_open(&fil, fn, FA_READ);
   if (fr) 
   {
@@ -970,6 +979,13 @@ int main(void)
         if ( elf_pheader.p_filesz % BUF_SIZE != 0)
           ++read_times;
       }
+        ur_puts(USART2, "elf_pheader.p_filesz: ");
+        print_u32(elf_pheader.p_filesz);
+        ur_puts(USART2, "\r\n");
+
+        ur_puts(USART2, "read_times: ");
+        print_u32(read_times);
+        ur_puts(USART2, "\r\n");
 
       for (int i=0 ; i < read_times; ++i)
       {
@@ -979,13 +995,25 @@ int main(void)
           read_len = elf_pheader.p_filesz - i * BUF_SIZE;
         }
         f_read(&fil, buf, read_len, &r_len);
-        s32_memcpy(elf_pheader.p_vaddr + read_len * i, buf, r_len);
-        (*(void(*)())entry)();
-        ur_puts(USART2, "back to loader\r\n");
-        while(1);
+        #if 0
+        ur_puts(USART2, "read_len: ");
+        print_u32(read_len);
+        ur_puts(USART2, "\r\n");
+        #endif
+
+        ur_puts(USART2, "r_len: ");
+        print_u32(r_len);
+        ur_puts(USART2, "\r\n");
+        s32_memcpy(elf_pheader.p_vaddr + BUF_SIZE * i, buf, r_len);
+        ur_puts(USART2, "elf_pheader.p_vaddr + read_len * i: ");
+        print_u32(elf_pheader.p_vaddr + BUF_SIZE * i);
+        ur_puts(USART2, "\r\n");
         //printf("yy r_len: %d\n", r_len);
         //print_packet(buf, r_len);
       }
+      (*(void(*)())entry)();
+      ur_puts(USART2, "back to loader\r\n");
+      while(1);
 
 #if 0
       if (elf_pheader.p_filesz > BUF_SIZE)
