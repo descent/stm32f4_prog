@@ -1,5 +1,5 @@
 include ../rule.mk
-libfat_objs =  ./exfuns/fattester.o ./exfuns/exfuns.o  ./src/diskio.o ./src/ff.o src/option/cc936.o  src/option/syscall.o  src/option/unicode.o 
+libfat_objs =  ./exfuns/fattester.o ./exfuns/exfuns.o  ./src/diskio.o ./src/ff.o src/option/cc950.o  src/option/syscall.o  src/option/unicode.o 
 
 TARGET=libfat.a
 ifeq ($(ARCH), cm3) 
