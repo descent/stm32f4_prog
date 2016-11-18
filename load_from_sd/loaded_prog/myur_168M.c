@@ -32,7 +32,10 @@ void init_bss()
   unsigned long *bss_dest;
 
   for (bss_dest = &_bss; bss_dest < &_ebss;)
-    *bss_dest++ = 0;
+  {
+    //*bss_dest++ = 0xabcd9876;
+    *bss_dest++ = 0x0;
+  }
 }
 
 char* s32_itoa(uint32_t n, char* str, int radix)
@@ -94,9 +97,10 @@ int mymain(void)
   char fmt_str[20];
   s32_itoa(x, fmt_str, 16);
   ur_puts(USART2, fmt_str);
+  ur_puts(USART2, "\r\n");
   for (int i=0 ; i < 4; ++i)
   {
-    s32_itoa(x, fmt_str, 16);
+    s32_itoa(buf[i], fmt_str, 16);
     ur_puts(USART2, fmt_str);
     ur_puts(USART2, "\r\n");
   }
