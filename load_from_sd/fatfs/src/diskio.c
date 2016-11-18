@@ -79,15 +79,16 @@ DSTATUS disk_initialize (
                 {
 #ifndef STM32F407
   printf("FILE_IMAGE_01\n");
-  //const char *fn = "fat32.img";
-  const char *fn = "c.img";
+  const char *fn = "fat32.img";
+  //const char *fn = "c.img";
 
   if (fs_01 == 0 )
   {
     fs_01 = fopen(fn, "r");
     if (fs_01 == NULL)
     {
-      perror("open imagefile.img error\n");
+      printf("open %s fail\n", fn);
+      perror("error message\n");
       exit(1);
     }
     printf("the 1st open %s ok\n", fn);
