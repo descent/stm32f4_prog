@@ -2,7 +2,7 @@ CFLAGS=-g
 MYCFLAGS=-Wl,-T./stm32.sd.ld -nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb
 #MYCFLAGS=-Wl,-T./stm32.ld -g -O2 -mlittle-endian -mthumb -mcpu=cortex-m4 -ffreestanding -nostdlib 
 
-CFLAGS=-nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -I.. -I../../inc
+CFLAGS=-nostartfiles -fno-common -O0 -g -mcpu=cortex-m3 -mthumb -I.. -I../../inc -std=c99
 
 myur_168M.elf: myur_168M.o
 	arm-none-eabi-gcc $(MYCFLAGS) $(INC) -o $@ $< 
