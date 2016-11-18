@@ -57,7 +57,7 @@
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
 
-#define _CODE_PAGE	936		//採用中文GBK編碼
+#define _CODE_PAGE	950		//採用中文 big5 編碼
 /* The _CODE_PAGE specifies the OEM code page to be used on the target system.
 /  Incorrect setting of the code page can cause a file open failure.
 /
