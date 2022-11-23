@@ -42,7 +42,7 @@ SECTIONS
   .stackarea(NOLOAD) :
   {
     . = ALIGN(8);
-    *(.stackarea .stackares.*)
+    *(.stackarea .stackares.* .stackares)
     . = ALIGN(8);
   } > SRAM
 
