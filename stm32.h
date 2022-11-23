@@ -10,6 +10,8 @@ extern unsigned long _edata;
 extern unsigned long _bss;
 extern unsigned long _ebss;
 
+int main(void);
+
 void ResetISR(void)
 {
   unsigned long *pulSrc, *pulDest;
